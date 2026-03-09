@@ -145,16 +145,21 @@ RenderSystem.prototype.onMapNodeClick = function(node) {
         this.game.audioSystem.playSelect();
     }
     
-    // 推进地图状态（标记当前节点为已访问）
-    this.game.advanceMap(node.id);
-    
     // 根据节点类型进入不同场景
     if (node.type === 'combat' || node.type === 'elite' || node.type === 'boss') {
+        // 推进地图状态（标记当前节点为已访问）
+        this.game.advanceMap(node.id);
         this.game.startCombat(node.type);
     } else if (node.type === 'rest') {
+        // 先显示休息站，再推进地图（避免renderMap覆盖界面）
         this.game.showRestScreen();
+        this.game.state.map.nodes[node.id].visited = true;
+        this.game.state.map.currentNode = node.id;
     } else if (node.type === 'shop') {
+        // 先显示商店，再推进地图（避免renderMap覆盖界面）
         this.game.showShopScreen();
+        this.game.state.map.nodes[node.id].visited = true;
+        this.game.state.map.currentNode = node.id;
     }
 };
 
@@ -1031,9 +1036,8 @@ RenderSystem.prototype.renderRestScreen = function() {
     var leaveBtn = document.getElementById('btn-leave-rest');
     if (leaveBtn) {
         leaveBtn.onclick = function() {
-            // 已经在进入休息站时调用过 advanceMap，这里只需返回地图
-            self.game.showScreen('map');
-            self.game.renderSystem.renderMap();
+            // 推进地图（解锁子节点等）
+            self.game.advanceMap(self.game.state.map.currentNode);
         };
     }
     
@@ -1197,9 +1201,8 @@ RenderSystem.prototype.renderShopScreen = function() {
     var leaveBtn = document.getElementById('btn-leave-shop');
     if (leaveBtn) {
         leaveBtn.onclick = function() {
-            // 已经在进入商店时调用过 advanceMap，这里只需返回地图
-            self.game.showScreen('map');
-            self.game.renderSystem.renderMap();
+            // 推进地图（解锁子节点等）
+            self.game.advanceMap(self.game.state.map.currentNode);
         };
     }
     
