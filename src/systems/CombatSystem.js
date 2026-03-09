@@ -311,6 +311,17 @@ CombatSystem.prototype.enemyTurn = function() {
         var enemy = aliveEnemies[enemyIndex];
         enemy.remainingActions = enemy.actions;
         
+        // 黄衣信徒被动：疯狂诅咒 - 20%几率恐惧敌人
+        if (player.badge === '黄衣信徒' && Math.random() < 0.2) {
+            self.game.log('🎭 黄衣之王的诅咒！' + enemy.name + '陷入恐惧，跳过行动！');
+            self.game.renderSystem.showPassiveEffect('🎭 恐惧！', enemy.icon);
+            // 跳过此敌人，处理下一个
+            setTimeout(function() {
+                processEnemyActions(enemyIndex + 1);
+            }, 800);
+            return;
+        }
+        
         function doNextAction() {
             if (enemy.remainingActions <= 0) {
                 // 当前敌人行动完成，处理下一个敌人

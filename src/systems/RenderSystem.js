@@ -379,6 +379,30 @@ RenderSystem.prototype.updateCombatUI = function() {
         this.updateElement('c-sanity', player.sanity);
         this.updateElement('c-max-sanity', player.maxSanity);
         
+        // 深渊使者：疯狂值显示
+        if (player.badge === '深渊使者') {
+            var combat = this.game.state.combat;
+            var madness = (combat && combat.madness) || 0;
+            this.updateElement('c-madness', madness);
+            var madnessDisplay = document.getElementById('madness-display');
+            if (madnessDisplay) {
+                madnessDisplay.style.display = 'inline';
+                // 疯狂值接近10时高亮
+                if (madness >= 8) {
+                    madnessDisplay.style.color = '#FF4500';
+                    madnessDisplay.style.animation = 'madnessPulse 0.5s infinite';
+                } else {
+                    madnessDisplay.style.color = '';
+                    madnessDisplay.style.animation = 'none';
+                }
+            }
+        } else {
+            var madnessDisplay = document.getElementById('madness-display');
+            if (madnessDisplay) {
+                madnessDisplay.style.display = 'none';
+            }
+        }
+        
         // 理智值低时警告效果
         var sanityRatio = player.sanity / player.maxSanity;
         var sanityItem = document.querySelector('.sanity-item');

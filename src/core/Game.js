@@ -358,7 +358,7 @@ Game.prototype.advanceMap = function(nodeIndex) {
     
     // 检查是否到达终点
     if (node.type === 'boss') {
-        if (this.state.floor < 2) {
+        if (this.state.floor < 3) {
             this.startFloor(this.state.floor + 1);
         } else {
             this.gameOver(true);
