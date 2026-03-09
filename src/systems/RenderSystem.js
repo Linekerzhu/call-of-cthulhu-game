@@ -145,6 +145,9 @@ RenderSystem.prototype.onMapNodeClick = function(node) {
         this.game.audioSystem.playSelect();
     }
     
+    // 推进地图状态（标记当前节点为已访问）
+    this.game.advanceMap(node.id);
+    
     // 根据节点类型进入不同场景
     if (node.type === 'combat' || node.type === 'elite' || node.type === 'boss') {
         this.game.startCombat(node.type);
@@ -1028,8 +1031,9 @@ RenderSystem.prototype.renderRestScreen = function() {
     var leaveBtn = document.getElementById('btn-leave-rest');
     if (leaveBtn) {
         leaveBtn.onclick = function() {
+            // 已经在进入休息站时调用过 advanceMap，这里只需返回地图
             self.game.showScreen('map');
-            self.game.advanceMap(self.game.state.map.currentNode + 1);
+            self.game.renderSystem.renderMap();
         };
     }
     
@@ -1193,8 +1197,9 @@ RenderSystem.prototype.renderShopScreen = function() {
     var leaveBtn = document.getElementById('btn-leave-shop');
     if (leaveBtn) {
         leaveBtn.onclick = function() {
+            // 已经在进入商店时调用过 advanceMap，这里只需返回地图
             self.game.showScreen('map');
-            self.game.advanceMap(self.game.state.map.currentNode + 1);
+            self.game.renderSystem.renderMap();
         };
     }
     
