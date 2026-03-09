@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>暗影尖塔 - 简单版</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #2C3E50;
+            color: white;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        
+        .screen {
+            display: none;
+            width: 100vw;
+            height: 100vh;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .screen.active {
+            display: flex;
+        }
+        
+        h1 {
+            color: #FFE66D;
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        
+        button {
+            padding: 15px 30px;
+            font-size: 20px;
+            background: #FF6B6B;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        
+        button:hover {
+            background: #ff5252;
+        }
+        
+        .status {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 标题屏幕 -->
+    <div id="screen-title" class="screen active">
+        <h1>🏰 暗影尖塔</h1>
+        <button onclick="startGame()">🎮 开整！</button>
+    </div>
+    
+    <!-- 游戏屏幕 -->
+    <div id="screen-game" class="screen">
+        <div class="status">
+            ❤️ <span id="hp">50</span> | 
+            ⚡ <span id="energy">3</span> | 
+            💰 <span id="gold">0</span>
+        </div>
+        <h2>游戏进行中</h2>
+        <p>这是一个简化测试版本</p>
+        <button onclick="endGame()">结束游戏</button>
+    </div>
+    
+    <script>
+        // 简单游戏状态
+        var gameState = {
+            hp: 50,
+            energy: 3,
+            gold: 0
+        };
+        
+        // 显示屏幕
+        function showScreen(name) {
+            var screens = document.querySelectorAll('.screen');
+            for (var i = 0; i < screens.length; i++) {
+                screens[i].classList.remove('active');
+            }
+            document.getElementById('screen-' + name).classList.add('active');
+        }
+        
+        // 开始游戏
+        function startGame() {
+            console.log('🎮 开始游戏');
+            gameState.hp = 50;
+            gameState.energy = 3;
+            gameState.gold = 0;
+            updateUI();
+            showScreen('game');
+        }
+        
+        // 更新UI
+        function updateUI() {
+            document.getElementById('hp').textContent = gameState.hp;
+            document.getElementById('energy').textContent = gameState.energy;
+            document.getElementById('gold').textContent = gameState.gold;
+        }
+        
+        // 结束游戏
+        function endGame() {
+            console.log('🏁 结束游戏');
+            showScreen('title');
+        }
+        
+        console.log('✅ 简单版加载完成');
+    </script>
+</body>
+</html>

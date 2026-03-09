@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>测试 - 暗影尖塔</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .test { margin: 10px 0; padding: 10px; background: #f0f0f0; }
+        .pass { color: green; }
+        .fail { color: red; }
+    </style>
+</head>
+<body>
+    <h1>🧪 暗影尖塔 - 兼容性测试</h1>
+    <div id="results"></div>
+    
+    <script src="data/Cards_Cthulhu.js"></script>
+    <script>
+        var results = document.getElementById('results');
+        
+        function test(name, condition) {
+            var div = document.createElement('div');
+            div.className = 'test ' + (condition ? 'pass' : 'fail');
+            div.textContent = (condition ? '✅' : '❌') + ' ' + name;
+            results.appendChild(div);
+        }
+        
+        // 测试 Cards
+        test('Cards 已定义', typeof Cards !== 'undefined');
+        test('Cards.疯狂挥击 存在', Cards && Cards['疯狂挥击']);
+        test('Cards.疯狂挥击.cost = 1', Cards && Cards['疯狂挥击'] && Cards['疯狂挥击'].cost === 1);
+        
+        // 测试 Utils
+        test('Utils 将定义', true);
+    </script>
+    <script src="main.js"></script>
+    <script>
+        test('Utils 已定义', typeof Utils !== 'undefined');
+        test('Utils.randomInt 是函数', typeof Utils.randomInt === 'function');
+        test('Utils.shuffle 工作正常', function() {
+            var arr = [1, 2, 3, 4, 5];
+            var shuffled = Utils.shuffle(arr);
+            return shuffled.length === 5;
+        }());
+        
+        // 测试 Game
+        test('Game 类已定义', typeof Game !== 'undefined');
+        
+        if (typeof Game !== 'undefined') {
+            try {
+                var g = new Game();
+                test('Game 实例可创建', true);
+                test('Game.showScreen 是方法', typeof g.showScreen === 'function');
+            } catch (e) {
+                test('Game 实例可创建: ' + e.message, false);
+            }
+        }
+    </script>
+</body>
+</html>

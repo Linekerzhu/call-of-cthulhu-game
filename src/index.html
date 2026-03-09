@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🐙 深渊召唤</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/cthulhu-theme.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- 游戏容器 -->
+    <div id="game-container">
+        <!-- 标题屏幕 -->
+        <div id="screen-title" class="screen active">
+            <div class="title-bg">
+                <div class="particles" id="particles"></div>
+                <div class="title-content">
+                    <h1 class="game-title">🐙 深渊召唤</h1>
+                    <p class="subtitle">The Call of Cthulhu</p>
+                    <div class="title-buttons">
+                        <button class="btn-pixel btn-primary" id="btn-start">🎮 直面恐惧</button>
+                    </div>
+                    <div class="title-info">
+                        <p>🦑 版本 v0.2.0 克苏鲁的呼唤</p>
+                        <p>💀 "那永恒长眠的并非亡者，在诡异的万古中，即使死亡本身亦会消逝"</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 徽章选择屏幕 -->
+        <div id="screen-badge" class="screen">
+            <div class="badge-screen">
+                <h2 class="badge-title">选择你的徽章</h2>
+                <p class="badge-subtitle">每个徽章都有独特的能力和专属卡牌</p>
+                <div class="badge-list" id="badge-list">
+                    <!-- 徽章卡片动态生成 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 地图屏幕 -->
+        <div id="screen-map" class="screen">
+            <div class="map-header">
+                <div class="status-bar">
+                    <span class="status-item">❤️ <span id="map-hp">50</span>/<span id="map-max-hp">50</span></span>
+                    <span class="status-item">🧠 <span id="map-sanity">50</span>/<span id="map-max-sanity">50</span></span>
+                    <span class="status-item">💰 <span id="map-gold">0</span></span>
+                    <span class="status-item">🦑 第<span id="map-floor">1</span>深渊</span>
+                </div>
+            </div>
+            <div class="map-container" id="map-container">
+                <!-- 地图节点动态生成 -->
+            </div>
+            <div class="map-actions">
+                <button class="btn-pixel" id="btn-view-deck-map">🎴 查看牌库</button>
+            </div>
+        </div>
+
+        <!-- 战斗屏幕 -->
+        <div id="screen-combat" class="screen">
+            <div class="combat-header">
+                <div class="status-bar">
+                    <span class="status-item">❤️ <span id="c-hp">50</span>/<span id="c-max-hp">50</span></span>
+                    <span class="status-item">⚡ <span id="c-energy">3</span>/3</span>
+                    <span class="status-item">👟 <span id="c-movement">3</span>/3</span>
+                    <span class="status-item">🛡️ <span id="c-block">0</span></span>
+                    <span class="status-item sanity-item">🧠 <span id="c-sanity">50</span>/<span id="c-max-sanity">50</span> <span id="sanity-state" style="font-size: 12px; margin-left: 5px;">理智清醒</span></span>
+                    <span class="status-item">💰 <span id="c-gold">0</span></span>
+                    <span class="status-item">回合<span id="c-turn">1</span></span>
+                </div>
+            </div>
+            
+            <div class="combat-main">
+                <!-- 网格容器 -->
+                <div class="grid-container">
+                    <div id="grid" class="grid"></div>
+                </div>
+                
+                <!-- 敌人信息面板 -->
+                <div class="enemy-panel" id="enemy-panel"></div>
+            </div>
+            
+            <!-- 战斗日志 -->
+            <div class="combat-log" id="combat-log"></div>
+            
+            <!-- 手牌区域 -->
+            <div class="hand-area" id="hand-area"></div>
+            
+            <!-- 结束回合按钮 -->
+            <div class="combat-actions">
+                <button class="btn-pixel btn-view-deck" id="btn-view-deck">🎴 牌库</button>
+                <button class="btn-end-turn" id="btn-end-turn">结束回合</button>
+            </div>
+        </div>
+
+        <!-- 奖励选择屏幕 -->
+        <div id="screen-reward" class="screen">
+            <div class="reward-screen">
+                <h2 class="reward-title">🏆 战斗胜利！</h2>
+                <p class="reward-subtitle">选择一张卡牌加入你的卡组</p>
+                <div class="reward-cards" id="reward-cards">
+                    <!-- 奖励卡牌动态生成 -->
+                </div>
+                <div class="reward-skip">
+                    <button class="btn-pixel" id="btn-skip-reward">跳过（获得金币）</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 休息站屏幕 -->
+        <div id="screen-rest" class="screen">
+            <div class="rest-screen">
+                <h2 class="rest-title">🏕️ 休息站</h2>
+                <p class="rest-subtitle">选择一项恢复</p>
+                <div class="rest-options">
+                    <div class="rest-option" id="rest-heal">
+                        <div class="rest-icon">❤️</div>
+                        <div class="rest-name">小憩片刻</div>
+                        <div class="rest-desc">恢复 30% 生命值</div>
+                    </div>
+                    <div class="rest-option" id="rest-sanity">
+                        <div class="rest-icon">🧠</div>
+                        <div class="rest-name">冥想恢复</div>
+                        <div class="rest-desc">恢复 20 点理智值</div>
+                    </div>
+                    <div class="rest-option" id="rest-upgrade">
+                        <div class="rest-icon">⬆️</div>
+                        <div class="rest-name">打磨卡牌</div>
+                        <div class="rest-desc">升级一张卡牌（伤害+2）</div>
+                    </div>
+                </div>
+                <button class="btn-pixel" id="btn-view-deck-rest">🎴 查看牌库</button>
+                <button class="btn-pixel" id="btn-leave-rest">继续旅程</button>
+            </div>
+        </div>
+
+        <!-- 商店屏幕 -->
+        <div id="screen-shop" class="screen">
+            <div class="shop-screen">
+                <h2 class="shop-title">🏪 神秘商店</h2>
+                <p class="shop-subtitle">花费金币购买卡牌或服务</p>
+                <div class="shop-gold">💰 <span id="shop-gold-amount">0</span> 金币</div>
+                <div class="shop-items" id="shop-items">
+                    <!-- 商店商品动态生成 -->
+                </div>
+                <button class="btn-pixel" id="btn-view-deck-shop">🎴 查看牌库</button>
+                <button class="btn-pixel" id="btn-leave-shop">离开商店</button>
+            </div>
+        </div>
+
+        <!-- 牌库查看屏幕 -->
+        <div id="screen-deck" class="screen">
+            <div class="deck-screen">
+                <h2 class="deck-title">🎴 我的牌库</h2>
+                <div class="deck-info">
+                    <span>共 <span id="deck-count">0</span> 张卡牌</span>
+                    <span>💰 <span id="deck-gold">0</span></span>
+                </div>
+                <div class="deck-container" id="deck-container">
+                    <!-- 牌库卡牌动态生成 -->
+                </div>
+                <button class="btn-pixel" id="btn-close-deck">返回</button>
+            </div>
+        </div>
+
+        <!-- 游戏结束屏幕 -->
+        <div id="screen-gameover" class="screen">
+            <div class="gameover-content">
+                <h2 id="gameover-title">💀 战败...</h2>
+                <p id="gameover-message">下次一定会更强的！</p>
+                <div class="gameover-stats" id="gameover-stats"></div>
+                <button class="btn-pixel" id="btn-restart">🔄 再来一局</button>
+                <button class="btn-pixel" id="btn-menu">📋 主菜单</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载游戏脚本 - 克苏鲁版本 -->
+    <script src="data/Cards_Cthulhu.js"></script>
+    <script src="data/Badges_Cthulhu.js"></script>
+    <script src="data/Shop.js"></script>
+    <script src="systems/AudioSystem.js"></script>
+    <script src="systems/RenderSystem.js"></script>
+    <script src="systems/InputSystem.js"></script>
+    <script src="systems/CombatSystem.js"></script>
+    <script src="core/Game.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>

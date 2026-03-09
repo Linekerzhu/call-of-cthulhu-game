@@ -1,0 +1,300 @@
+/* ==================== */
+/* 🐙 克苏鲁主题样式 */
+/* ==================== */
+
+/* CSS变量定义 - 克苏鲁风格 */
+:root {
+    /* 主色调 - 深渊色系 */
+    --color-primary: #8B0000;        /* 深血红色 */
+    --color-secondary: #2E8B57;      /* 病态海绿色 */
+    --color-accent: #9400D3;         /* 暗紫色 */
+    
+    /* 背景色 - 深海与黑暗 */
+    --color-bg-dark: #0a0a1a;        /* 深海黑 */
+    --color-bg-medium: #1a1a2e;      /* 深渊紫 */
+    --color-bg-light: #2d2d44;       /* 病态灰 */
+    
+    /* 功能色 - 疯狂与恐怖 */
+    --color-hp: #8B0000;             /* 血红色 */
+    --color-energy: #4B0082;         /* 靛蓝色（魔力） */
+    --color-block: #2F4F4F;          /* 深岩灰（古老护盾） */
+    --color-gold: #FFD700;           /* 古老金币 */
+    --color-sanity: #9370DB;         /* 理智值 - 淡紫色 */
+    --color-madness: #FF1493;        /* 疯狂值 - 深粉色 */
+    
+    /* 特殊效果色 */
+    --color-cthulhu: #006400;        /* 克苏鲁绿 */
+    --color-tentacle: #800080;       /* 触手紫 */
+    --color-eldritch: #00CED1;       /* 异界青 */
+    
+    /* 像素尺寸 */
+    --cell-size: 64px;
+    
+    /* 字体 - 神秘风格 */
+    --font-title: 'Cinzel', 'ZCOOL KuaiLe', 'Microsoft YaHei', serif;
+    --font-body: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+}
+
+/* 全局背景 - 深渊纹理 */
+html, body {
+    background: 
+        radial-gradient(ellipse at center, #1a1a2e 0%, #0a0a1a 100%),
+        url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23111' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    color: #c0c0c0;
+}
+
+/* 标题屏幕 - 古神降临 */
+.title-screen {
+    background: 
+        linear-gradient(180deg, rgba(10,10,26,0.9) 0%, rgba(26,26,46,0.8) 50%, rgba(10,10,26,0.9) 100%),
+        radial-gradient(circle at 50% 30%, rgba(148,0,211,0.3) 0%, transparent 50%);
+}
+
+.game-title {
+    color: #9400D3;
+    text-shadow: 
+        0 0 10px rgba(148,0,211,0.8),
+        0 0 20px rgba(148,0,211,0.5),
+        0 0 30px rgba(148,0,211,0.3);
+    animation: eldritchGlow 3s ease-in-out infinite;
+    -webkit-animation: eldritchGlow 3s ease-in-out infinite;
+}
+
+@keyframes eldritchGlow {
+    0%, 100% { 
+        text-shadow: 0 0 10px rgba(148,0,211,0.8), 0 0 20px rgba(148,0,211,0.5);
+        color: #9400D3;
+    }
+    50% { 
+        text-shadow: 0 0 20px rgba(0,206,209,0.8), 0 0 40px rgba(0,206,209,0.5);
+        color: #00CED1;
+    }
+}
+
+/* 战斗屏幕 - 深海恐怖 */
+.combat-screen {
+    background: 
+        linear-gradient(180deg, #0a0a1a 0%, #1a1a2e 100%);
+}
+
+/* 网格 - 疯狂之地 */
+.grid-cell {
+    background: rgba(128, 0, 128, 0.2);
+    border: 1px solid rgba(128, 0, 128, 0.4);
+}
+
+.grid-cell:hover {
+    border-color: rgba(0, 206, 209, 0.6);
+    box-shadow: 0 0 10px rgba(0, 206, 209, 0.3);
+}
+
+/* 疯狂之地特殊效果 */
+.grid-cell.madness {
+    background: rgba(128, 0, 128, 0.25);
+    border: 2px solid rgba(128, 0, 128, 0.6);
+    box-shadow: inset 0 0 15px rgba(128, 0, 128, 0.4);
+    animation: madnessPulse 2s infinite;
+}
+
+/* 敌人 - 恐怖样式 */
+.entity.enemy {
+    filter: drop-shadow(0 0 5px rgba(139, 0, 0, 0.8));
+}
+
+/* 卡片 - 羊皮纸风格 */
+.card {
+    background: linear-gradient(135deg, #2a2a3a 0%, #1a1a2a 100%);
+    border: 2px solid rgba(148, 0, 211, 0.4);
+    color: #c0c0c0;
+    box-shadow: 
+        0 4px 6px rgba(0,0,0,0.5),
+        inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+.card:hover {
+    border-color: rgba(0, 206, 209, 0.6);
+    box-shadow: 
+        0 0 15px rgba(0, 206, 209, 0.3),
+        0 4px 6px rgba(0,0,0,0.5);
+}
+
+.card.selected {
+    border-color: #FFD700;
+    box-shadow: 
+        0 0 20px rgba(255, 215, 0, 0.4),
+        0 0 40px rgba(255, 215, 0, 0.2);
+}
+
+/* 理智值条 */
+.sanity-bar {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--color-sanity);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.sanity-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4B0082 0%, #9370DB 100%);
+    transition: width 0.3s;
+}
+
+/* 疯狂效果 */
+.madness-effect {
+    animation: madnessPulse 2s infinite;
+    -webkit-animation: madnessPulse 2s infinite;
+}
+
+@keyframes madnessPulse {
+    0%, 100% { 
+        filter: hue-rotate(0deg) saturate(1);
+    }
+    50% { 
+        filter: hue-rotate(30deg) saturate(1.5);
+    }
+}
+
+/* 触手攻击范围 - 血红色 */
+.grid-cell.in-range {
+    background: rgba(139, 0, 0, 0.3);
+    border-color: rgba(139, 0, 0, 0.6);
+    box-shadow: inset 0 0 15px rgba(139, 0, 0, 0.4);
+}
+
+/* 古老符文高亮 */
+.grid-cell.reachable {
+    border: 3px dashed var(--color-eldritch);
+    background: rgba(0, 206, 209, 0.1);
+}
+
+/* 伤害数字 - 血迹效果 */
+.damage-number {
+    color: #8B0000;
+    text-shadow: 
+        0 0 5px rgba(139, 0, 0, 0.8),
+        2px 2px 4px rgba(0,0,0,0.8);
+    font-family: 'Cinzel', serif;
+}
+
+/* 按钮 - 古老祭坛风格 */
+.btn-pixel {
+    background: linear-gradient(135deg, #2a2a3a 0%, #1a1a2a 100%);
+    border: 2px solid rgba(148, 0, 211, 0.5);
+    color: #c0c0c0;
+    box-shadow: 
+        0 4px 0 #0a0a1a,
+        0 0 10px rgba(148, 0, 211, 0.3);
+}
+
+.btn-pixel:hover {
+    border-color: rgba(0, 206, 209, 0.6);
+    box-shadow: 
+        0 4px 0 #0a0a1a,
+        0 0 20px rgba(0, 206, 209, 0.4);
+}
+
+.btn-pixel:active {
+    box-shadow: 
+        0 0 0 #0a0a1a,
+        0 0 15px rgba(0, 206, 209, 0.3);
+}
+
+/* 地图节点 - 异界风格 */
+.map-node-card {
+    background: rgba(45, 45, 68, 0.7);
+    border: 2px solid rgba(148, 0, 211, 0.3);
+}
+
+.map-node-card.available {
+    border-color: var(--color-eldritch);
+    box-shadow: 0 0 15px rgba(0, 206, 209, 0.3);
+}
+
+.map-node-card.elite-path {
+    border-color: var(--color-primary);
+    background: rgba(139, 0, 0, 0.15);
+    animation: cthulhuShake 3s infinite;
+    -webkit-animation: cthulhuShake 3s infinite;
+}
+
+@keyframes cthulhuShake {
+    0%, 90%, 100% { transform: translateY(-5px) rotate(0deg); }
+    92% { transform: translateY(-5px) rotate(-1deg); }
+    94% { transform: translateY(-5px) rotate(1deg); }
+    96% { transform: translateY(-5px) rotate(-1deg); }
+    98% { transform: translateY(-5px) rotate(1deg); }
+}
+
+/* 战斗日志 - 疯狂日记风格 */
+.combat-log {
+    background: rgba(10, 10, 26, 0.8);
+    border: 1px solid rgba(148, 0, 211, 0.3);
+    font-family: 'Noto Serif SC', serif;
+}
+
+.log-entry {
+    border-left: 3px solid rgba(148, 0, 211, 0.4);
+}
+
+/* 徽章选择 - 古神召唤 */
+.badge-card {
+    background: linear-gradient(135deg, rgba(45,45,68,0.9) 0%, rgba(26,26,46,0.9) 100%);
+    border: 2px solid rgba(148, 0, 211, 0.3);
+}
+
+.badge-card:hover {
+    border-color: var(--color-eldritch);
+    box-shadow: 0 0 25px rgba(0, 206, 209, 0.3);
+}
+
+/* 商店 - 神秘黑市 */
+.shop-screen {
+    background: linear-gradient(135deg, #0f0f1f 0%, #1a1a2e 100%);
+}
+
+/* 休息站 - 安全屋 */
+.rest-screen {
+    background: linear-gradient(135deg, #1a2a1a 0%, #0a1a0a 100%);
+}
+
+/* 游戏结束 - 永恒的疯狂 */
+.gameover-screen {
+    background: radial-gradient(ellipse at center, rgba(139,0,0,0.2) 0%, rgba(10,10,26,0.95) 100%);
+}
+
+/* 滚动条 - 古老风格 */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0a0a1a;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #9400D3 0%, #4B0082 100%);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #00CED1 0%, #9400D3 100%);
+}
+
+/* 文本选择 - 异界色彩 */
+::selection {
+    background: rgba(148, 0, 211, 0.5);
+    color: #fff;
+}
+
+/* 响应式字体 */
+@media (max-width: 375px) {
+    :root {
+        --cell-size: 48px;
+    }
+}
+
+@media (min-width: 768px) {
+    :root {
+        --cell-size: 72px;
+    }
+}
