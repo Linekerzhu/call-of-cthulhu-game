@@ -203,15 +203,12 @@ Game.prototype.giveStartingDeck = function() {
         var name = startingCards[i];
         var cardData = Cards[name];
         if (cardData) {
-            this.state.player.deck.push({
-                name: name,
-                cost: cardData.cost,
-                type: cardData.type,
-                damage: cardData.damage,
-                block: cardData.block,
-                range: cardData.range,
-                description: cardData.description
-            });
+            // 创建完整的卡牌副本，包括 badge 属性
+            var cardCopy = {};
+            for (var key in cardData) {
+                cardCopy[key] = cardData[key];
+            }
+            this.state.player.deck.push(cardCopy);
         } else {
             console.error('❌ 基础卡牌不存在: ' + name);
         }
