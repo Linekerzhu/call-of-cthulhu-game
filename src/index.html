@@ -6,7 +6,7 @@
     <title>🐙 深渊召唤</title>
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/cthulhu-theme.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;700&family=Noto+Serif+SC:wght@400;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <!-- 游戏容器 -->
@@ -14,16 +14,27 @@
         <!-- 标题屏幕 -->
         <div id="screen-title" class="screen active">
             <div class="title-bg">
+                <div class="title-bg-img"></div>
+                <div class="fog fog-1"></div>
+                <div class="fog fog-2"></div>
                 <div class="particles" id="particles"></div>
+                <div class="ghost-fires">
+                    <div class="ghost-fire gf-1"></div>
+                    <div class="ghost-fire gf-2"></div>
+                    <div class="ghost-fire gf-3"></div>
+                    <div class="ghost-fire gf-4"></div>
+                    <div class="ghost-fire gf-5"></div>
+                </div>
+                <div class="abyss-eye" id="abyss-eye"></div>
                 <div class="title-content">
-                    <h1 class="game-title">🐙 深渊召唤</h1>
+                    <h1 class="game-title">深渊召唤</h1>
                     <p class="subtitle">The Call of Cthulhu</p>
                     <div class="title-buttons">
-                        <button class="btn-pixel btn-primary" id="btn-start">🎮 直面恐惧</button>
+                        <button class="btn-pixel btn-primary" id="btn-start">直面恐惧</button>
                     </div>
                     <div class="title-info">
-                        <p>🦑 版本 v0.2.0 克苏鲁的呼唤</p>
-                        <p>💀 "那永恒长眠的并非亡者，在诡异的万古中，即使死亡本身亦会消逝"</p>
+                        <p>v0.2.0</p>
+                        <p>"那永恒长眠的并非亡者，在诡异的万古中，即使死亡本身亦会消逝"</p>
                     </div>
                 </div>
             </div>
@@ -44,10 +55,9 @@
         <div id="screen-map" class="screen">
             <div class="map-header">
                 <div class="status-bar">
-                    <span class="status-item">❤️ <span id="map-hp">50</span>/<span id="map-max-hp">50</span></span>
-                    <span class="status-item">🧠 <span id="map-sanity">50</span>/<span id="map-max-sanity">50</span></span>
-                    <span class="status-item">💰 <span id="map-gold">0</span></span>
-                    <span class="status-item">🦑 第<span id="map-floor">1</span>深渊</span>
+                    <span class="status-item hp-item"><span class="stat-icon">♥</span> <span id="map-hp">50</span>/<span id="map-max-hp">50</span></span>
+                    <span class="status-item san-item"><span class="stat-icon">☽</span> <span id="map-sanity">50</span>/<span id="map-max-sanity">50</span></span>
+                    <span class="status-item floor-item"><span class="stat-icon">⛊</span> 第<span id="map-floor">1</span>深渊</span>
                 </div>
             </div>
             <div class="map-container" id="map-container">
@@ -60,16 +70,18 @@
 
         <!-- 战斗屏幕 -->
         <div id="screen-combat" class="screen">
+            <!-- SAN扭曲叠加层 -->
+            <div class="san-distortion-overlay" id="san-distortion"></div>
+
             <div class="combat-header">
                 <div class="status-bar">
-                    <span class="status-item">❤️ <span id="c-hp">50</span>/<span id="c-max-hp">50</span></span>
-                    <span class="status-item">⚡ <span id="c-energy">3</span>/3</span>
-                    <span class="status-item">👟 <span id="c-movement">3</span>/3</span>
-                    <span class="status-item">🛡️ <span id="c-block">0</span></span>
-                    <span class="status-item sanity-item">🧠 <span id="c-sanity">50</span>/<span id="c-max-sanity">50</span> <span id="sanity-state" style="font-size: 12px; margin-left: 5px;">理智清醒</span></span>
-                    <span class="status-item madness-item" id="madness-display" style="display: none;">🔥 <span id="c-madness">0</span></span>
-                    <span class="status-item">💰 <span id="c-gold">0</span></span>
-                    <span class="status-item">回合<span id="c-turn">1</span></span>
+                    <span class="status-item hp-item"><span class="stat-icon">♥</span> <span id="c-hp">50</span>/<span id="c-max-hp">50</span></span>
+                    <span class="status-item energy-item"><span class="stat-icon">◆</span> <span id="c-energy">3</span>/3</span>
+                    <span class="status-item move-item"><span class="stat-icon">⬡</span> <span id="c-movement">3</span>/3</span>
+                    <span class="status-item block-item"><span class="stat-icon">◇</span> <span id="c-block">0</span></span>
+                    <span class="status-item sanity-item"><span class="stat-icon">☽</span> <span id="c-sanity">50</span>/<span id="c-max-sanity">50</span> <span id="sanity-state" class="sanity-state-label">理智清醒</span></span>
+                    <span class="status-item madness-item" id="madness-display" style="display: none;"><span class="stat-icon">⚝</span> <span id="c-madness">0</span></span>
+                    <span class="status-item turn-item">回合<span id="c-turn">1</span></span>
                 </div>
             </div>
             
@@ -78,22 +90,48 @@
                 <div class="grid-container">
                     <div id="grid" class="grid"></div>
                 </div>
-                
-                <!-- 敌人信息面板 -->
-                <div class="enemy-panel" id="enemy-panel"></div>
             </div>
             
-            <!-- 战斗日志 -->
+            <!-- 战斗日志 (半透明叠加) -->
             <div class="combat-log" id="combat-log"></div>
-            
-            <!-- 手牌区域 -->
-            <div class="hand-area" id="hand-area"></div>
-            
-            <!-- 结束回合按钮 -->
+
+            <!-- 卡牌区域 (底部栏) -->
+            <div class="card-zones-bar">
+                <!-- 待抽区 -->
+                <div class="card-zone draw-pile-zone" id="draw-pile-zone" title="待抽牌堆">
+                    <div class="zone-icon">🂠</div>
+                    <div class="zone-count" id="draw-pile-count">0</div>
+                    <div class="zone-label">待抽</div>
+                </div>
+
+                <!-- 手牌区域 -->
+                <div class="hand-area" id="hand-area"></div>
+
+                <!-- 右侧区域 -->
+                <div class="card-zone-right">
+                    <!-- 墓地/弃牌区 -->
+                    <div class="card-zone discard-pile-zone" id="discard-pile-zone" title="弃牌堆（墓地）">
+                        <div class="zone-icon">🪦</div>
+                        <div class="zone-count" id="discard-pile-count">0</div>
+                        <div class="zone-label">墓地</div>
+                    </div>
+                    <!-- 剔除区 -->
+                    <div class="card-zone exile-zone" id="exile-zone" title="剔除区（已消耗）">
+                        <div class="zone-icon">⛔</div>
+                        <div class="zone-count" id="exile-count">0</div>
+                        <div class="zone-label">剔除</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 动作栏 -->
             <div class="combat-actions">
-                <button class="btn-pixel btn-view-deck" id="btn-view-deck">🎴 牌库</button>
+                <button class="btn-pixel btn-view-deck" id="btn-view-deck">牌库</button>
                 <button class="btn-end-turn" id="btn-end-turn">结束回合</button>
             </div>
+
+            <!-- 卡牌动画容器 -->
+            <div class="card-animation-layer" id="card-animation-layer"></div>
         </div>
 
         <!-- 奖励选择屏幕 -->
@@ -105,7 +143,7 @@
                     <!-- 奖励卡牌动态生成 -->
                 </div>
                 <div class="reward-skip">
-                    <button class="btn-pixel" id="btn-skip-reward">跳过（获得金币）</button>
+                    <button class="btn-pixel" id="btn-skip-reward">跳过（恢复理智）</button>
                 </div>
             </div>
         </div>
@@ -140,9 +178,9 @@
         <!-- 商店屏幕 -->
         <div id="screen-shop" class="screen">
             <div class="shop-screen">
-                <h2 class="shop-title">🏪 神秘商店</h2>
-                <p class="shop-subtitle">花费金币购买卡牌或服务</p>
-                <div class="shop-gold">💰 <span id="shop-gold-amount">0</span> 金币</div>
+                <h2 class="shop-title">🕯️ 深渊商店</h2>
+                <p class="shop-subtitle">以理智上限或生命上限为代价，获取禁忌知识</p>
+                <div class="shop-gold">☽ SAN上限: <span id="shop-san-max">50</span> | ♥ HP上限: <span id="shop-hp-max">50</span></div>
                 <div class="shop-items" id="shop-items">
                     <!-- 商店商品动态生成 -->
                 </div>
@@ -157,7 +195,6 @@
                 <h2 class="deck-title">🎴 我的牌库</h2>
                 <div class="deck-info">
                     <span>共 <span id="deck-count">0</span> 张卡牌</span>
-                    <span>💰 <span id="deck-gold">0</span></span>
                 </div>
                 <div class="deck-container" id="deck-container">
                     <!-- 牌库卡牌动态生成 -->
@@ -178,16 +215,7 @@
         </div>
     </div>
 
-    <!-- 加载游戏脚本 - 克苏鲁版本 -->
-    <script src="data/Cards_Cthulhu.js"></script>
-    <script src="data/Badges_Cthulhu.js"></script>
-    <script src="data/Shop.js"></script>
-    <script src="systems/AudioSystem.js"></script>
-    <script src="systems/RenderSystem.js"></script>
-    <script src="systems/InputSystem.js"></script>
-    <script src="systems/CombatSystem.js"></script>
-    <script src="core/Game.js"></script>
-    <script src="main.js"></script>
-    <script src="debug.js"></script>
+    <!-- Vite ES Module 入口 -->
+    <script type="module" src="/main.ts"></script>
 </body>
 </html>
