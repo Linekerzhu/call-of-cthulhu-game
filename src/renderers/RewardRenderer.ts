@@ -163,15 +163,20 @@ export default class RewardRenderer {
             const typeTag = `<span class="rct-type">${typeIcons[cardData.type] || '🎴'} ${typeNames[cardData.type] || cardData.type}</span>`;
             const rarityTag = `<span class="rct-rarity rct-${cardData.rarity || 'common'}">${rarityNames[cardData.rarity] || ''}</span>`;
 
-            // 收集所有代价
+            // 收集所有代价（去重：top-level sanityCost 和 effects 中的 sanityCost 只显示一次）
             const costs: string[] = [];
+            let sanityCostShown = false;
             if (cardData.sanityCost) {
                 costs.push(`🧠 理智 -${cardData.sanityCost}`);
+                sanityCostShown = true;
             }
             // 检查 effects 中的代价
             if (cardData.effects) {
                 for (const eff of cardData.effects) {
-                    if (eff.type === 'sanityCost') costs.push(`🧠 理智 -${eff.value}`);
+                    if (eff.type === 'sanityCost' && !sanityCostShown) {
+                        costs.push(`🧠 理智 -${eff.value}`);
+                        sanityCostShown = true;
+                    }
                     if (eff.type === 'selfDamage') costs.push(`💔 自伤 ${eff.value}`);
                     if (eff.type === 'consumeMadness') costs.push(`🌀 消耗疯狂值`);
                 }
