@@ -327,8 +327,54 @@ export default class CombatRenderer {
             descArea.className = 'card-desc';
             // 显示简短效果描述
             const desc = displayCard.description || originalCard.description || '';
-            // 截取前20字避免溢出
-            descArea.textContent = desc.length > 20 ? desc.substring(0, 20) + '…' : desc;
+
+            // 计算增减益对数值的影响
+            const attackBonus = this.game.buffManager.getValue('attackBonus');
+            // 获取玩家身上的 debuff/buff 攻击修正
+            let statMod = 0;
+            const pAny = player as any;
+            if (pAny.statusEffects && pAny.statusEffects.length > 0) {
+                for (const se of pAny.statusEffects) {
+                    if (se.type === 'debuff' && se.id === 'weaken_attack') statMod -= se.value;
+                    if (se.type === 'buff' && se.id === 'buff_attack') statMod += se.value;
+                }
+            }
+            const totalMod = attackBonus + statMod;
+
+            // 如果有 buff/debuff 修正，高亮描述中的数值
+            if (totalMod !== 0 && displayCard.effects) {
+                const parts: string[] = [];
+                for (const eff of displayCard.effects) {
+                    if (eff.type === 'targetDamage' || eff.type === 'rangedDamage' || eff.type === 'piercingDamage') {
+                        const base = eff.value;
+                        const modified = base + totalMod;
+                        if (totalMod > 0) {
+                            parts.push(`<span class="stat-buffed">⚔${modified}</span>`);
+                        } else {
+                            parts.push(`<span class="stat-debuffed">⚔${modified}</span>`);
+                        }
+                    } else if (eff.type === 'gainBlock') {
+                        parts.push(`🛡${eff.value}`);
+                    } else if (eff.type === 'aoe') {
+                        const base = eff.value;
+                        const modified = base + totalMod;
+                        if (totalMod > 0) {
+                            parts.push(`<span class="stat-buffed">💥${modified}</span>`);
+                        } else if (totalMod < 0) {
+                            parts.push(`<span class="stat-debuffed">💥${modified}</span>`);
+                        } else {
+                            parts.push(`💥${base}`);
+                        }
+                    }
+                }
+                if (parts.length > 0) {
+                    descArea.innerHTML = parts.join(' ');
+                } else {
+                    descArea.textContent = desc.length > 20 ? desc.substring(0, 20) + '…' : desc;
+                }
+            } else {
+                descArea.textContent = desc.length > 20 ? desc.substring(0, 20) + '…' : desc;
+            }
             cardEl.appendChild(descArea);
 
             // === 底部信息栏 ===

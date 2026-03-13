@@ -21,6 +21,7 @@ export default class MapRenderer {
 
         const mapEl = document.createElement('div');
         mapEl.className = 'map-tree';
+        mapEl.style.position = 'relative';
 
         const levels = this.organizeMapLevels(map);
 
@@ -29,22 +30,9 @@ export default class MapRenderer {
 
         for (let i = 0; i < reversedLevels.length; i++) {
             const levelNodes = reversedLevels[i];
-            const isFirst = i === reversedLevels.length - 1; // 原始第0层 = 起点
-            const isLast = i === 0; // 原始最后层 = Boss
 
             const levelEl = document.createElement('div');
             levelEl.className = 'map-level';
-
-            // 层间连线
-            if (i > 0) {
-                const connEl = document.createElement('div');
-                connEl.className = 'map-connector';
-                // 根据节点数量调整连线
-                if (levelNodes.length > 1) {
-                    connEl.classList.add('branch-connector');
-                }
-                levelEl.appendChild(connEl);
-            }
 
             // 分叉提示
             if (levelNodes.length > 1) {
@@ -59,6 +47,7 @@ export default class MapRenderer {
 
             for (let j = 0; j < levelNodes.length; j++) {
                 const nodeCard = this.createMapNodeCard(levelNodes[j]);
+                nodeCard.setAttribute('data-node-id', String(levelNodes[j].id));
                 nodesContainer.appendChild(nodeCard);
             }
 
@@ -68,10 +57,87 @@ export default class MapRenderer {
 
         container.appendChild(mapEl);
 
-        // 滚动到底部（起点位置）
+        // 滚动到底部（起点位置），然后绘制连线
         requestAnimationFrame(() => {
             container.scrollTop = container.scrollHeight;
+            this.drawConnectionLines(mapEl, map);
         });
+    }
+
+    /**
+     * 在地图上绘制节点间的SVG连线
+     */
+    private drawConnectionLines(mapEl: HTMLElement, map: any): void {
+        // 移除旧SVG
+        const oldSvg = mapEl.querySelector('.map-svg-lines');
+        if (oldSvg) oldSvg.remove();
+
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('class', 'map-svg-lines');
+        svg.style.position = 'absolute';
+        svg.style.top = '0';
+        svg.style.left = '0';
+        svg.style.width = '100%';
+        svg.style.height = '100%';
+        svg.style.pointerEvents = 'none';
+        svg.style.zIndex = '0';
+
+        const mapRect = mapEl.getBoundingClientRect();
+
+        // 遍历所有节点，绘制 parent→child 连线
+        for (const node of map.nodes) {
+            if (!node.children || node.children.length === 0) continue;
+
+            const parentEl = mapEl.querySelector(`[data-node-id="${node.id}"]`) as HTMLElement;
+            if (!parentEl) continue;
+
+            const parentRect = parentEl.getBoundingClientRect();
+            const px = parentRect.left + parentRect.width / 2 - mapRect.left;
+            const py = parentRect.top - mapRect.top;  // 顶部（因为地图是倒置的，parent在下方）
+
+            for (const childId of node.children) {
+                const childEl = mapEl.querySelector(`[data-node-id="${childId}"]`) as HTMLElement;
+                if (!childEl) continue;
+
+                const childRect = childEl.getBoundingClientRect();
+                const cx = childRect.left + childRect.width / 2 - mapRect.left;
+                const cy = childRect.top + childRect.height - mapRect.top;  // 底部
+
+                // 判断连线状态
+                const childNode = map.nodes[childId];
+                const isOnPlayerPath = node.visited && (childNode.visited || childNode.available);
+                const isActiveChoice = node.visited && childNode.available && !childNode.visited;
+
+                // 创建路径
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                const midY = (py + cy) / 2;
+                const d = `M ${cx} ${cy} C ${cx} ${midY}, ${px} ${midY}, ${px} ${py}`;
+                path.setAttribute('d', d);
+                path.setAttribute('fill', 'none');
+                path.setAttribute('stroke-linecap', 'round');
+
+                if (isActiveChoice) {
+                    // 当前可选路径 — 亮青色脉动
+                    path.setAttribute('stroke', 'rgba(95, 212, 212, 0.7)');
+                    path.setAttribute('stroke-width', '3');
+                    path.classList.add('path-active');
+                } else if (isOnPlayerPath) {
+                    // 已走过的路径 — 暗金色
+                    path.setAttribute('stroke', 'rgba(201, 168, 76, 0.5)');
+                    path.setAttribute('stroke-width', '2.5');
+                } else {
+                    // 未激活的路径 — 暗淡虚线（但仍可辨认）
+                    path.setAttribute('stroke', 'rgba(147, 112, 219, 0.25)');
+                    path.setAttribute('stroke-width', '2');
+                    path.setAttribute('stroke-dasharray', '6 4');
+                }
+
+                svg.appendChild(path);
+            }
+        }
+
+        // SVG 插入到 map-tree 最前面（在节点之后渲染，z-index=0）
+        mapEl.insertBefore(svg, mapEl.firstChild);
     }
 
     private organizeMapLevels(map: any): any[][] {
