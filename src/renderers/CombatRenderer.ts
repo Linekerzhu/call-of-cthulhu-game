@@ -322,16 +322,13 @@ export default class CombatRenderer {
             artArea.appendChild(artImg);
             cardEl.appendChild(artArea);
 
-            // === 描述栏 ===
+            // === 描述栏（含增减益内嵌着色）===
             const descArea = document.createElement('div');
             descArea.className = 'card-desc';
-            // 始终显示原始描述文本
             const desc = displayCard.description || originalCard.description || '';
-            descArea.textContent = desc.length > 20 ? desc.substring(0, 20) + '…' : desc;
-            cardEl.appendChild(descArea);
+            const truncDesc = desc.length > 24 ? desc.substring(0, 24) + '…' : desc;
 
-            // === 增减益修正标签 ===
-            // 收集所有 buff/debuff 对不同数值的修正
+            // 收集 buff/debuff 修正
             const pAny = player as any;
             const attackBonus = this.game.buffManager.getValue('attackBonus');
             let atkStatusMod = 0;
@@ -344,38 +341,50 @@ export default class CombatRenderer {
                     if (se.type === 'buff' && se.id === 'buff_defense') blockStatusMod += se.value;
                 }
             }
-            const dmgMod = attackBonus + atkStatusMod;  // 伤害总修正
-            const blkMod = blockStatusMod;              // 格挡总修正
+            const dmgMod = attackBonus + atkStatusMod;
+            const blkMod = blockStatusMod;
 
-            // 检查卡牌效果是否有被修正的数值
+            // 构建 base值→{modified值, css类} 的替换映射
+            const replacements: Array<{base: number; modified: number; cls: string}> = [];
             if (displayCard.effects && (dmgMod !== 0 || blkMod !== 0)) {
-                const modTags: string[] = [];
                 for (const eff of displayCard.effects) {
-                    // 伤害类效果
-                    if ((eff.type === 'targetDamage' || eff.type === 'rangedDamage' || 
+                    if ((eff.type === 'targetDamage' || eff.type === 'rangedDamage' ||
                          eff.type === 'piercingDamage' || eff.type === 'aoe') && dmgMod !== 0) {
-                        const base = eff.value;
-                        const modified = Math.max(0, base + dmgMod);
-                        const icon = eff.type === 'aoe' ? '💥' : '⚔️';
-                        const cls = dmgMod > 0 ? 'stat-buffed' : 'stat-debuffed';
-                        modTags.push(`<span class="${cls}">${icon}${base}→${modified}</span>`);
+                        replacements.push({
+                            base: eff.value,
+                            modified: Math.max(0, eff.value + dmgMod),
+                            cls: dmgMod > 0 ? 'stat-buffed' : 'stat-debuffed'
+                        });
                     }
-                    // 格挡类效果
                     if (eff.type === 'gainBlock' && blkMod !== 0) {
-                        const base = eff.value;
-                        const modified = Math.max(0, base + blkMod);
-                        const cls = blkMod > 0 ? 'stat-buffed' : 'stat-debuffed';
-                        modTags.push(`<span class="${cls}">🛡️${base}→${modified}</span>`);
+                        replacements.push({
+                            base: eff.value,
+                            modified: Math.max(0, eff.value + blkMod),
+                            cls: blkMod > 0 ? 'stat-buffed' : 'stat-debuffed'
+                        });
                     }
-                    // 治疗类效果（如有buff/debuff也可考虑）
-                }
-                if (modTags.length > 0) {
-                    const modBar = document.createElement('div');
-                    modBar.className = 'card-mod-bar';
-                    modBar.innerHTML = modTags.join(' ');
-                    cardEl.appendChild(modBar);
                 }
             }
+
+            // 在描述文本中替换数值为着色版本
+            if (replacements.length > 0) {
+                let htmlDesc = truncDesc;
+                // 用标记避免重复替换同一个数字
+                for (const r of replacements) {
+                    const baseStr = String(r.base);
+                    // 替换描述中第一次出现的 base 数值
+                    const idx = htmlDesc.indexOf(baseStr);
+                    if (idx !== -1) {
+                        htmlDesc = htmlDesc.substring(0, idx)
+                            + `<span class="${r.cls}">${r.modified}</span>`
+                            + htmlDesc.substring(idx + baseStr.length);
+                    }
+                }
+                descArea.innerHTML = htmlDesc;
+            } else {
+                descArea.textContent = truncDesc;
+            }
+            cardEl.appendChild(descArea);
 
             // === 底部信息栏 ===
             const infoBar = document.createElement('div');
@@ -514,17 +523,59 @@ export default class CombatRenderer {
             content += `<div class="tooltip-desc">${card.description}</div>`;
         }
 
+        // 计算当前增减益修正（供tooltip显示）
+        const ttPlayer = this.game.state.player;
+        const ttPAny = ttPlayer as any;
+        const ttAtkBonus = this.game.buffManager.getValue('attackBonus');
+        let ttAtkStatus = 0, ttBlkStatus = 0;
+        if (ttPAny.statusEffects && ttPAny.statusEffects.length > 0) {
+            for (const se of ttPAny.statusEffects) {
+                if (se.type === 'debuff' && se.id === 'weaken_attack') ttAtkStatus -= se.value;
+                if (se.type === 'buff' && se.id === 'buff_attack') ttAtkStatus += se.value;
+                if (se.type === 'debuff' && se.id === 'weaken_defense') ttBlkStatus -= se.value;
+                if (se.type === 'buff' && se.id === 'buff_defense') ttBlkStatus += se.value;
+            }
+        }
+        const ttDmgMod = ttAtkBonus + ttAtkStatus;
+        const ttBlkMod = ttBlkStatus;
+
         const effectTexts: string[] = [];
         if (card.effects && card.effects.length > 0) {
             for (let ei = 0; ei < card.effects.length; ei++) {
                 const eff = card.effects[ei];
                 switch (eff.type) {
-                    case 'targetDamage': effectTexts.push(`伤害: ${eff.value}`); break;
-                    case 'gainBlock': effectTexts.push(`格挡: ${eff.value}`); break;
+                    case 'targetDamage':
+                    case 'rangedDamage':
+                    case 'piercingDamage':
+                        if (ttDmgMod !== 0) {
+                            const modCls = ttDmgMod > 0 ? 'stat-buffed' : 'stat-debuffed';
+                            const sign = ttDmgMod > 0 ? '+' : '';
+                            effectTexts.push(`伤害: ${eff.value}（<span class="${modCls}">${sign}${ttDmgMod}</span>）`);
+                        } else {
+                            effectTexts.push(`伤害: ${eff.value}`);
+                        }
+                        break;
+                    case 'gainBlock':
+                        if (ttBlkMod !== 0) {
+                            const modCls = ttBlkMod > 0 ? 'stat-buffed' : 'stat-debuffed';
+                            const sign = ttBlkMod > 0 ? '+' : '';
+                            effectTexts.push(`格挡: ${eff.value}（<span class="${modCls}">${sign}${ttBlkMod}</span>）`);
+                        } else {
+                            effectTexts.push(`格挡: ${eff.value}`);
+                        }
+                        break;
+                    case 'aoe':
+                        if (ttDmgMod !== 0) {
+                            const modCls = ttDmgMod > 0 ? 'stat-buffed' : 'stat-debuffed';
+                            const sign = ttDmgMod > 0 ? '+' : '';
+                            effectTexts.push(`AOE: ${eff.value}（<span class="${modCls}">${sign}${ttDmgMod}</span>）`);
+                        } else {
+                            effectTexts.push(`AOE: ${eff.value}`);
+                        }
+                        break;
                     case 'heal': effectTexts.push(`恢复: ${eff.value}HP`); break;
                     case 'gainEnergy': effectTexts.push(`能量: +${eff.value}`); break;
                     case 'gainMovement': effectTexts.push(`移动力: +${eff.value}`); break;
-                    case 'aoe': effectTexts.push(`AOE: ${eff.value}`); break;
                     case 'drawCards': effectTexts.push(`抽卡: ${eff.value}`); break;
                     case 'selfDamage': effectTexts.push(`自伤: ${eff.value}`); break;
                     case 'sanityCost': effectTexts.push(`🧠-${eff.value}`); break;
