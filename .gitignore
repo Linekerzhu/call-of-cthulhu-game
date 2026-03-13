@@ -52,3 +52,6 @@ coverage/
 # 其他
 *.bak
 *.orig
+
+# 高清原画存档（仅保留优化版）
+public/cards_hd/
