@@ -290,6 +290,27 @@ export default class RenderSystem {
         for (let i = 0; i < deck.length; i++) {
             const card = deck[i];
             const cardEl = this.buildFullCard(card, typeIcons);
+
+            // 悬浮详情 tooltip
+            let hoverTimer: ReturnType<typeof setTimeout> | null = null;
+            cardEl.addEventListener('mouseover', (e) => {
+                const target = e.currentTarget as HTMLElement;
+                hoverTimer = setTimeout(() => {
+                    this.combatRenderer.showCardTooltip(card, target);
+                }, 800);
+            });
+            cardEl.addEventListener('mouseout', () => {
+                if (hoverTimer) { clearTimeout(hoverTimer); hoverTimer = null; }
+                this.combatRenderer.hideCardTooltip();
+            });
+            // 触屏支持
+            cardEl.addEventListener('touchstart', (e) => {
+                this.combatRenderer.showCardTooltip(card, e.currentTarget as HTMLElement);
+            });
+            cardEl.addEventListener('touchend', () => {
+                setTimeout(() => this.combatRenderer.hideCardTooltip(), 300);
+            });
+
             container.appendChild(cardEl);
         }
     }

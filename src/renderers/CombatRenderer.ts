@@ -47,6 +47,8 @@ export default class CombatRenderer {
         if (exileCount) exileCount.textContent = String(exilePile.length);
     }
 
+    private _enemyTooltipTimer: ReturnType<typeof setTimeout> | null = null;
+
     public showEnemyTooltip(enemy: any, screenX: number, screenY: number): void {
         this.hideEnemyTooltip();
         const tooltip = document.createElement('div');
@@ -82,9 +84,18 @@ export default class CombatRenderer {
         tooltip.style.top = `${top}px`;
         tooltip.style.left = `${left}px`;
         tooltip.style.opacity = '1';
+
+        // 安全网：5秒后自动消失，防止 pointerout 未触发导致残留
+        this._enemyTooltipTimer = setTimeout(() => {
+            this.hideEnemyTooltip();
+        }, 5000);
     }
 
     public hideEnemyTooltip(): void {
+        if (this._enemyTooltipTimer) {
+            clearTimeout(this._enemyTooltipTimer);
+            this._enemyTooltipTimer = null;
+        }
         const tooltip = document.getElementById('enemy-tooltip');
         if (tooltip && tooltip.parentNode) {
             tooltip.parentNode.removeChild(tooltip);
@@ -232,6 +243,10 @@ export default class CombatRenderer {
     }
 
     public renderHand(): void {
+        // 清除可能残留的 tooltip（DOM 重建前清理）
+        this.hideCardTooltip();
+        this.hideEnemyTooltip();
+
         const handEl = document.getElementById('hand-area');
         if (!handEl) return;
 
@@ -347,6 +362,7 @@ export default class CombatRenderer {
 
             // === 事件 ===
             cardEl.addEventListener('click', () => {
+                this.hideCardTooltip();  // 出牌时立即清除tooltip
                 this.onCardClick(i);
             });
 
@@ -370,7 +386,7 @@ export default class CombatRenderer {
             cardEl.addEventListener('touchend', () => {
                 setTimeout(() => {
                     this.hideCardTooltip();
-                }, 2000);
+                }, 300);
             });
 
             handEl.appendChild(cardEl);
@@ -431,11 +447,10 @@ export default class CombatRenderer {
         }
     }
 
+    private _cardTooltipTimer: ReturnType<typeof setTimeout> | null = null;
+
     public showCardTooltip(card: any, targetEl: HTMLElement): void {
-        const existingTooltip = document.getElementById('card-tooltip');
-        if (existingTooltip) {
-            existingTooltip.parentNode?.removeChild(existingTooltip);
-        }
+        this.hideCardTooltip();
 
         const tooltip = document.createElement('div');
         tooltip.id = 'card-tooltip';
@@ -526,9 +541,18 @@ export default class CombatRenderer {
         tooltip.style.top = `${top}px`;
         tooltip.style.left = `${left}px`;
         tooltip.style.opacity = '1';
+
+        // 安全网：6秒后自动消失，防止 mouseout 未触发导致残留
+        this._cardTooltipTimer = setTimeout(() => {
+            this.hideCardTooltip();
+        }, 6000);
     }
 
     public hideCardTooltip(): void {
+        if (this._cardTooltipTimer) {
+            clearTimeout(this._cardTooltipTimer);
+            this._cardTooltipTimer = null;
+        }
         const tooltip = document.getElementById('card-tooltip');
         if (tooltip) {
             tooltip.style.opacity = '0';
