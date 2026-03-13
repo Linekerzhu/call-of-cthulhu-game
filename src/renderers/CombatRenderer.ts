@@ -325,57 +325,57 @@ export default class CombatRenderer {
             // === 描述栏 ===
             const descArea = document.createElement('div');
             descArea.className = 'card-desc';
-            // 显示简短效果描述
+            // 始终显示原始描述文本
             const desc = displayCard.description || originalCard.description || '';
+            descArea.textContent = desc.length > 20 ? desc.substring(0, 20) + '…' : desc;
+            cardEl.appendChild(descArea);
 
-            // 计算增减益对数值的影响
-            const attackBonus = this.game.buffManager.getValue('attackBonus');
-            // 获取玩家身上的 debuff/buff 攻击修正
-            let statMod = 0;
+            // === 增减益修正标签 ===
+            // 收集所有 buff/debuff 对不同数值的修正
             const pAny = player as any;
+            const attackBonus = this.game.buffManager.getValue('attackBonus');
+            let atkStatusMod = 0;
+            let blockStatusMod = 0;
             if (pAny.statusEffects && pAny.statusEffects.length > 0) {
                 for (const se of pAny.statusEffects) {
-                    if (se.type === 'debuff' && se.id === 'weaken_attack') statMod -= se.value;
-                    if (se.type === 'buff' && se.id === 'buff_attack') statMod += se.value;
+                    if (se.type === 'debuff' && se.id === 'weaken_attack') atkStatusMod -= se.value;
+                    if (se.type === 'buff' && se.id === 'buff_attack') atkStatusMod += se.value;
+                    if (se.type === 'debuff' && se.id === 'weaken_defense') blockStatusMod -= se.value;
+                    if (se.type === 'buff' && se.id === 'buff_defense') blockStatusMod += se.value;
                 }
             }
-            const totalMod = attackBonus + statMod;
+            const dmgMod = attackBonus + atkStatusMod;  // 伤害总修正
+            const blkMod = blockStatusMod;              // 格挡总修正
 
-            // 如果有 buff/debuff 修正，高亮描述中的数值
-            if (totalMod !== 0 && displayCard.effects) {
-                const parts: string[] = [];
+            // 检查卡牌效果是否有被修正的数值
+            if (displayCard.effects && (dmgMod !== 0 || blkMod !== 0)) {
+                const modTags: string[] = [];
                 for (const eff of displayCard.effects) {
-                    if (eff.type === 'targetDamage' || eff.type === 'rangedDamage' || eff.type === 'piercingDamage') {
+                    // 伤害类效果
+                    if ((eff.type === 'targetDamage' || eff.type === 'rangedDamage' || 
+                         eff.type === 'piercingDamage' || eff.type === 'aoe') && dmgMod !== 0) {
                         const base = eff.value;
-                        const modified = base + totalMod;
-                        if (totalMod > 0) {
-                            parts.push(`<span class="stat-buffed">⚔${modified}</span>`);
-                        } else {
-                            parts.push(`<span class="stat-debuffed">⚔${modified}</span>`);
-                        }
-                    } else if (eff.type === 'gainBlock') {
-                        parts.push(`🛡${eff.value}`);
-                    } else if (eff.type === 'aoe') {
-                        const base = eff.value;
-                        const modified = base + totalMod;
-                        if (totalMod > 0) {
-                            parts.push(`<span class="stat-buffed">💥${modified}</span>`);
-                        } else if (totalMod < 0) {
-                            parts.push(`<span class="stat-debuffed">💥${modified}</span>`);
-                        } else {
-                            parts.push(`💥${base}`);
-                        }
+                        const modified = Math.max(0, base + dmgMod);
+                        const icon = eff.type === 'aoe' ? '💥' : '⚔️';
+                        const cls = dmgMod > 0 ? 'stat-buffed' : 'stat-debuffed';
+                        modTags.push(`<span class="${cls}">${icon}${base}→${modified}</span>`);
                     }
+                    // 格挡类效果
+                    if (eff.type === 'gainBlock' && blkMod !== 0) {
+                        const base = eff.value;
+                        const modified = Math.max(0, base + blkMod);
+                        const cls = blkMod > 0 ? 'stat-buffed' : 'stat-debuffed';
+                        modTags.push(`<span class="${cls}">🛡️${base}→${modified}</span>`);
+                    }
+                    // 治疗类效果（如有buff/debuff也可考虑）
                 }
-                if (parts.length > 0) {
-                    descArea.innerHTML = parts.join(' ');
-                } else {
-                    descArea.textContent = desc.length > 20 ? desc.substring(0, 20) + '…' : desc;
+                if (modTags.length > 0) {
+                    const modBar = document.createElement('div');
+                    modBar.className = 'card-mod-bar';
+                    modBar.innerHTML = modTags.join(' ');
+                    cardEl.appendChild(modBar);
                 }
-            } else {
-                descArea.textContent = desc.length > 20 ? desc.substring(0, 20) + '…' : desc;
             }
-            cardEl.appendChild(descArea);
 
             // === 底部信息栏 ===
             const infoBar = document.createElement('div');

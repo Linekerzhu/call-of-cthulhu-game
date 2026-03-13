@@ -1729,6 +1729,31 @@ html, body {
     font-style: italic;
 }
 
+/* 卡牌增减益修正标签栏 */
+.card-mod-bar {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    padding: 2px 4px;
+    font-size: 9px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 2px;
+    margin: 0 2px;
+    flex-wrap: wrap;
+}
+.card-mod-bar .stat-buffed,
+.card-mod-bar .stat-debuffed {
+    font-size: 9px;
+    padding: 1px 3px;
+    border-radius: 2px;
+}
+.card-mod-bar .stat-buffed {
+    background: rgba(255, 140, 66, 0.15);
+}
+.card-mod-bar .stat-debuffed {
+    background: rgba(80, 100, 80, 0.2);
+}
+
 /* ==================== */
 /* 敌人 Tooltip (悬浮信息) */
 /* ==================== */
