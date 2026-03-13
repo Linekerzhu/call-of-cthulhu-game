@@ -305,15 +305,13 @@ export default class SceneRouter {
             }
         }
 
-        this.showScreen('map');
-        this.advanceToNextNode();
+        this.returnToMap();
     }
 
     public skipReward(): void {
         this.game.modifySanity(5);
         this.game.state.log('🧠 选择遗忘，恢复5点理智');
-        this.showScreen('map');
-        this.advanceToNextNode();
+        this.returnToMap();
     }
 
     // ====================
@@ -340,15 +338,15 @@ export default class SceneRouter {
     }
 
     public restUpgrade(): void {
+        // 展示可选择的卡牌升级界面
+        this.game.renderSystem?.renderRestUpgradeSelection();
+    }
+
+    public executeUpgrade(cardIndex: number): void {
         const player = this.game.state.player;
-        // 找到第一张可升级的攻击卡
-        const upgradable = player.deck.filter((c: any) => c.upgrade && !c.upgraded);
-        if (upgradable.length === 0) {
-            this.game.renderSystem?.showPassiveEffect('没有可升级的卡牌', '⚠️');
-            return;
-        }
-        // 随机升级一张
-        const target = upgradable[Math.floor(Math.random() * upgradable.length)];
+        const target = player.deck[cardIndex];
+        if (!target || !target.upgrade || target.upgraded) return;
+
         const oldName = target.name;
         if (target.upgrade) {
             if (target.upgrade.damage) target.damage = target.upgrade.damage;
@@ -363,21 +361,18 @@ export default class SceneRouter {
     }
 
     public leaveRest(): void {
-        this.showScreen('map');
-        this.advanceToNextNode();
+        this.returnToMap();
     }
 
     /**
-     * 安全地推进到下一个地图节点（使用子节点而非盲目+1）
+     * 返回地图画面（不自动推进节点）
+     * 节点在 advanceMap(id, skipDisplay=true) 时已经设置好了
+     * children 的 available 状态，所以只需显示地图即可。
      */
-    public advanceToNextNode(): void {
-        const map = this.game.state.map!;
-        const currentNode = map.nodes[map.currentNode];
-        if (currentNode.children && currentNode.children.length > 0) {
-            this.advanceMap(currentNode.children[0]);
-        } else {
-            this.game.renderSystem?.renderMap();
-        }
+    public returnToMap(): void {
+        this.showScreen('map');
+        this.game.renderSystem?.renderMap();
+        this.game.renderSystem?.updateMapUI();
     }
 
     public endTurn(): void {

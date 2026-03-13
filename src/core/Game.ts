@@ -117,10 +117,10 @@ export default class Game {
     public restHeal(): void { this.router.restHeal(); }
     public restSanity(): void { this.router.restSanity(); }
     public restUpgrade(): void { this.router.restUpgrade(); }
+    public executeUpgrade(cardIndex: number): void { this.router.executeUpgrade(cardIndex); }
     public leaveRest(): void { this.router.leaveRest(); }
     public leaveShop(): void {
-        this.router.showScreen('map');
-        this.router.advanceToNextNode();
+        this.router.returnToMap();
     }
     public endTurn(): void { this.router.endTurn(); }
     public gameOver(victory: boolean): void { this.router.gameOver(victory); }

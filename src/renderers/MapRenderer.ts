@@ -186,9 +186,7 @@ export default class MapRenderer {
 
         // 回到地图
         setTimeout(() => {
-            (this.game as any).router.showScreen('map');
-            this.game.renderSystem?.renderMap();
-            this.game.renderSystem?.updateMapUI();
+            (this.game as any).router.returnToMap();
         }, 1500);
     }
 
