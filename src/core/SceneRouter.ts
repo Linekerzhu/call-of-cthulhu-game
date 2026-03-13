@@ -1,6 +1,7 @@
 import Utils from './Utils.ts';
 import Cards from '../data/Cards_Cthulhu.ts';
 import { BadgeManager } from '../data/Badges_Cthulhu.ts';
+import { ProtagonistManager } from '../data/Protagonists.ts';
 import type Game from './Game.ts';
 
 /**
@@ -12,6 +13,7 @@ import type Game from './Game.ts';
 export default class SceneRouter {
     private game: Game;
     public deckReturnScreen: string = 'map';
+    public selectedProtagonist: string | null = null;
 
     constructor(game: Game) {
         this.game = game;
@@ -44,9 +46,37 @@ export default class SceneRouter {
 
         this.game.state.initPlayer();
         this.game.state.floor = 1;
+        this.selectedProtagonist = null;
 
+        this.showProtagonistSelect();
+    }
+
+    // ====================
+    // 主角选择
+    // ====================
+
+    public showProtagonistSelect(): void {
+        this.showScreen('protagonist');
+        this.game.renderSystem?.renderProtagonistSelect();
+    }
+
+    public selectProtagonist(protagonistId: string): void {
+        this.game.eventBus.emit('combat:select');
+        this.selectedProtagonist = protagonistId;
+
+        // 应用主角属性到玩家
+        const playerCopy = { ...this.game.state.player };
+        playerCopy.protagonist = protagonistId;  // 保存主角ID供渲染使用
+        ProtagonistManager.applyProtagonist(playerCopy, protagonistId);
+        this.game.state.setPlayerStats(playerCopy);
+
+        // 进入徽章选择
         this.showBadgeSelect();
     }
+
+    // ====================
+    // 徽章选择
+    // ====================
 
     public showBadgeSelect(): void {
         this.showScreen('badge');
@@ -57,12 +87,16 @@ export default class SceneRouter {
 
         this.game.eventBus.emit('combat:select');
         this.giveStartingDeck();
-        BadgeManager.applyBadge(this.game.state.player, badgeId);
 
-        this.game.state.player!.drawPile = Utils.shuffle(this.game.state.player!.deck.slice());
-        this.game.state.player!.discardPile = [];
-        this.game.state.player!.hand = [];
+        // 徽章叠加在主角属性之上（hpBonus / energyBonus / sanity / 起始卡牌）
+        const playerCopy = { ...this.game.state.player };
+        BadgeManager.applyBadge(playerCopy, badgeId);
 
+        // 初始化牌组状态（一次性提交到 store）
+        playerCopy.drawPile = Utils.shuffle(playerCopy.deck.slice());
+        playerCopy.discardPile = [];
+        playerCopy.hand = [];
+        this.game.state.setPlayerStats(playerCopy);
 
         this.startFloor(1);
     }
@@ -104,6 +138,7 @@ export default class SceneRouter {
         this.generateMap(floorNum);
         this.showScreen('map');
         this.game.renderSystem?.renderMap();
+        this.game.renderSystem?.updateMapUI();
 
         if (floorNum > 1) {
             const erosionMsg = floorNum === 2

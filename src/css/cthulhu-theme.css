@@ -4,13 +4,16 @@
 
 /* ————— 设计系统变量 ————— */
 :root {
-    /* 深海调色板 */
-    --abyss-black:    #06080d;
-    --abyss-deep:     #0c1018;
-    --abyss-dark:     #111827;
-    --abyss-medium:   #1a2332;
-    --abyss-light:    #243044;
-    --abyss-surface:  #2d3b50;
+    /* 深海调色板 — 墨绿+暗紫+锈红 */
+    --abyss-black:    #040a06;
+    --abyss-deep:     #0a1a0f;
+    --abyss-dark:     #0f1a18;
+    --abyss-medium:   #1a2b22;
+    --abyss-light:    #1e3528;
+    --abyss-surface:  #253d30;
+    --abyss-purple:   #1a0a1f;
+    --rust-red:       #4a1a10;
+    --rust-glow:      #6b2a15;
 
     /* 功能色 */
     --blood:          #8b1a1a;
@@ -76,9 +79,9 @@
 html, body {
     background: var(--abyss-black);
     background-image:
-        radial-gradient(ellipse at 20% 50%, rgba(105, 68, 160, 0.06) 0%, transparent 60%),
-        radial-gradient(ellipse at 80% 20%, rgba(42, 157, 143, 0.04) 0%, transparent 60%),
-        radial-gradient(ellipse at 50% 100%, rgba(139, 26, 26, 0.05) 0%, transparent 50%);
+        radial-gradient(ellipse at 20% 50%, rgba(26, 10, 31, 0.12) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(10, 26, 15, 0.10) 0%, transparent 60%),
+        radial-gradient(ellipse at 50% 100%, rgba(74, 26, 16, 0.08) 0%, transparent 50%);
     color: var(--text-primary);
     font-family: var(--font-body);
     letter-spacing: 0.02em;
@@ -275,7 +278,9 @@ html, body {
 
 .combat-screen {
     background:
-        linear-gradient(180deg, var(--abyss-black) 0%, var(--abyss-deep) 50%, var(--abyss-dark) 100%);
+        linear-gradient(180deg, var(--abyss-black) 0%, var(--abyss-deep) 40%, var(--abyss-purple) 100%);
+    position: relative;
+    overflow: hidden;
 }
 
 /* 状态栏 */
@@ -537,6 +542,220 @@ html, body {
 .badge-desc { color: var(--text-secondary); }
 .badge-passive { color: var(--gold); }
 .badge-cards { color: var(--text-dim); }
+
+/* ============================================ */
+/* 👤 主角选择                                  */
+/* ============================================ */
+
+.protagonist-screen {
+    background:
+        radial-gradient(ellipse at 50% 20%, rgba(42, 157, 143, 0.06) 0%, transparent 60%),
+        linear-gradient(180deg, var(--abyss-deep) 0%, var(--abyss-dark) 100%);
+    min-height: 100vh;
+    padding: 24px 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.protagonist-screen-title {
+    font-family: var(--font-heading);
+    color: var(--gold);
+    text-shadow: 0 0 15px rgba(201, 168, 76, 0.3);
+    text-align: center;
+    font-size: 28px;
+    margin-bottom: 4px;
+}
+
+.protagonist-screen-subtitle {
+    color: var(--text-secondary);
+    font-style: italic;
+    text-align: center;
+    margin-bottom: 24px;
+    font-size: 14px;
+}
+
+/* --- 横向三栏布局 --- */
+.protagonist-list {
+    display: flex;
+    flex-direction: row;
+    gap: 16px;
+    max-width: 1100px;
+    width: 100%;
+    margin: 0 auto;
+    justify-content: center;
+    align-items: stretch;
+}
+
+.protagonist-card {
+    flex: 1;
+    max-width: 340px;
+    background: linear-gradient(135deg, rgba(26, 35, 50, 0.92) 0%, rgba(17, 24, 39, 0.92) 100%);
+    border: 2px solid rgba(201, 168, 76, 0.15);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(6px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.protagonist-card:hover {
+    border-color: var(--gold);
+    box-shadow: 0 4px 24px rgba(201, 168, 76, 0.15), 0 0 30px rgba(201, 168, 76, 0.06);
+    transform: translateY(-4px);
+}
+
+/* --- 头部：头像居中 + 名字居中 --- */
+.protagonist-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    width: 100%;
+}
+
+.protagonist-icon {
+    font-size: 36px;
+    width: 120px;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(201, 168, 76, 0.2);
+    border-radius: 4px;
+    flex-shrink: 0;
+    overflow: hidden;
+    box-shadow:
+        3px 3px 0 rgba(0, 0, 0, 0.5),
+        inset 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.protagonist-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 2px;
+}
+
+.protagonist-info {
+    text-align: center;
+}
+
+.protagonist-name {
+    font-family: var(--font-heading);
+    color: var(--text-bright);
+    font-size: 18px;
+    margin: 0 0 3px 0;
+    letter-spacing: 0.04em;
+}
+
+.protagonist-title {
+    font-size: 12px;
+    color: var(--teal-glow);
+    font-family: var(--font-ui);
+    letter-spacing: 0.06em;
+}
+
+.protagonist-desc {
+    color: var(--text-secondary);
+    font-size: 12px;
+    line-height: 1.5;
+    margin-bottom: 10px;
+    text-align: center;
+    width: 100%;
+}
+
+.protagonist-stats {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+    width: 100%;
+}
+
+.stat-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.stat-group-label {
+    font-family: var(--font-heading);
+    font-size: 10px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 1px;
+}
+
+.stat-group.physical .stat-group-label { color: rgba(196, 51, 51, 0.7); }
+.stat-group.mental .stat-group-label { color: rgba(105, 68, 160, 0.8); }
+
+.stat-bar-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+}
+
+.stat-bar-item .stat-label {
+    width: 52px;
+    color: var(--text-secondary);
+    font-family: var(--font-ui);
+    font-size: 10px;
+    flex-shrink: 0;
+}
+
+.stat-bar-outer {
+    flex: 1;
+    height: 5px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.stat-bar-inner {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.6s ease;
+}
+
+.stat-bar-inner.strong { background: linear-gradient(90deg, #c9a84c, #e8c864); }
+.stat-bar-inner.good   { background: linear-gradient(90deg, #2a9d8f, #40c9b8); }
+.stat-bar-inner.normal { background: linear-gradient(90deg, #4a6670, #6a8a94); }
+.stat-bar-inner.low    { background: linear-gradient(90deg, #6b4040, #8b5a5a); }
+.stat-bar-inner.weak   { background: linear-gradient(90deg, #5a3030, #7c4040); }
+
+.stat-bar-item .stat-value {
+    width: 48px;
+    text-align: right;
+    font-family: var(--font-ui);
+    font-size: 10px;
+    flex-shrink: 0;
+}
+
+.stat-value.strong { color: var(--gold-bright); }
+.stat-value.good   { color: var(--teal-glow); }
+.stat-value.normal { color: var(--text-secondary); }
+.stat-value.low    { color: #c08080; }
+.stat-value.weak   { color: #d06060; }
+
+.protagonist-backstory {
+    color: var(--text-dim);
+    font-style: italic;
+    font-size: 11px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(201, 168, 76, 0.08);
+    line-height: 1.5;
+    text-align: center;
+    width: 100%;
+}
 
 /* ============================================ */
 /* 🎁 奖励/商店/休息站                          */
@@ -897,32 +1116,27 @@ html, body {
 /* --- 结束回合按钮 → 像素 RPG 风 --- */
 .btn-end-turn {
     border-radius: 2px !important;
-    border: 2px solid var(--gold-dim) !important;
-    background: linear-gradient(180deg, #2a2840 0%, #1a1830 50%, #12101e 100%) !important;
+    border: 2px solid var(--rust-glow, #6b2a15) !important;
+    background: linear-gradient(180deg, #2a1810 0%, #1a0e08 50%, #120a06 100%) !important;
     box-shadow:
         3px 3px 0 rgba(0,0,0,0.7),
         inset 1px 1px 0 rgba(255,255,255,0.08),
         inset -1px -1px 0 rgba(0,0,0,0.3) !important;
-    padding: 10px 32px !important;
-    font-size: 14px !important;
-    letter-spacing: 0.15em !important;
+    padding: 8px 28px !important;
+    font-size: 13px !important;
+    letter-spacing: 0.12em !important;
     text-transform: uppercase;
     position: relative;
-}
-
-.btn-end-turn::before {
-    content: '⚔';
-    margin-right: 6px;
-    font-size: 12px;
+    color: #e8c080 !important;
 }
 
 .btn-end-turn:hover {
-    border-color: var(--gold) !important;
-    color: var(--gold-bright) !important;
+    border-color: #c9a84c !important;
+    color: #ffd700 !important;
     text-shadow: 0 0 8px rgba(201, 168, 76, 0.5) !important;
     box-shadow:
         3px 3px 0 rgba(0,0,0,0.7),
-        0 0 15px rgba(201, 168, 76, 0.2),
+        0 0 15px rgba(107, 42, 21, 0.3),
         inset 1px 1px 0 rgba(201, 168, 76, 0.1) !important;
 }
 
@@ -948,27 +1162,115 @@ html, body {
         inset 1px 1px 0 rgba(0,0,0,0.2) !important;
 }
 
-/* --- 卡牌区域像素框 (draw/discard/exile) --- */
+/* --- 卡牌区域 → 主题化像素画背景 --- */
 .card-zone {
-    border-radius: 2px !important;
-    border: 2px solid rgba(100, 80, 140, 0.4) !important;
-    background: rgba(15, 10, 25, 0.7) !important;
+    border-radius: 4px !important;
+    border: 2px solid rgba(100, 80, 140, 0.35) !important;
+    background: rgba(8, 5, 15, 0.85) !important;
     box-shadow:
         2px 2px 0 rgba(0,0,0,0.5),
+        inset 0 0 15px rgba(0,0,0,0.4),
         inset 1px 1px 0 rgba(255,255,255,0.04) !important;
+    position: relative;
+    overflow: hidden;
+    min-width: 64px;
+    min-height: 72px;
+    transition: all 0.3s ease;
+}
+
+/* 背景图叠加层 */
+.card-zone::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    opacity: 0.35;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.card-zone:hover::before {
+    opacity: 0.55;
 }
 
 .card-zone:hover {
-    border-color: rgba(147, 112, 219, 0.7) !important;
+    border-color: rgba(147, 112, 219, 0.6) !important;
     box-shadow:
         2px 2px 0 rgba(0,0,0,0.5),
-        0 0 10px rgba(147, 112, 219, 0.25) !important;
+        0 0 15px rgba(147, 112, 219, 0.3),
+        inset 0 0 15px rgba(0,0,0,0.3) !important;
     transform: translateY(-3px) !important;
 }
 
+/* 确保内容在背景上方 */
+.card-zone .zone-icon,
+.card-zone .zone-count,
+.card-zone .zone-label {
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.7);
+}
+
+.zone-count {
+    font-size: 18px !important;
+    font-weight: bold;
+}
+
+/* 待抽牌堆 → 古籍魔典图 */
+.draw-pile-zone::before {
+    background-image: url('/cthulhu/icons/zone_draw.png');
+}
+.draw-pile-zone {
+    border-color: rgba(60, 120, 80, 0.4) !important;
+}
+.draw-pile-zone:hover {
+    border-color: rgba(80, 180, 100, 0.6) !important;
+    box-shadow:
+        2px 2px 0 rgba(0,0,0,0.5),
+        0 0 15px rgba(60, 140, 80, 0.3),
+        inset 0 0 15px rgba(0,0,0,0.3) !important;
+}
+
+/* 弃牌堆/墓地 → 墓碑图 */
+.discard-pile-zone::before {
+    background-image: url('/cthulhu/icons/zone_discard.png');
+}
+.discard-pile-zone {
+    border-color: rgba(120, 80, 140, 0.4) !important;
+}
+.discard-pile-zone:hover {
+    border-color: rgba(160, 100, 200, 0.6) !important;
+    box-shadow:
+        2px 2px 0 rgba(0,0,0,0.5),
+        0 0 15px rgba(140, 80, 180, 0.3),
+        inset 0 0 15px rgba(0,0,0,0.3) !important;
+}
+
+/* 剔除区 → 虚空漩涡图 */
+.exile-zone::before {
+    background-image: url('/cthulhu/icons/zone_exile.png');
+}
+.exile-zone {
+    border-color: rgba(140, 50, 50, 0.4) !important;
+}
+.exile-zone:hover {
+    border-color: rgba(200, 60, 60, 0.6) !important;
+    box-shadow:
+        2px 2px 0 rgba(0,0,0,0.5),
+        0 0 15px rgba(160, 40, 40, 0.3),
+        inset 0 0 15px rgba(0,0,0,0.3) !important;
+}
+
 .card-zones-bar {
-    background: linear-gradient(180deg, rgba(6, 8, 13, 0.2) 0%, rgba(10, 8, 18, 0.9) 100%) !important;
-    border-top: 2px solid rgba(201, 168, 76, 0.1) !important;
+    background:
+        linear-gradient(180deg, rgba(4, 10, 6, 0.7) 0%, rgba(8, 12, 10, 0.85) 100%),
+        url('/cthulhu/icons/card_area_bg.png') !important;
+    background-size: auto, 512px auto !important;
+    background-repeat: no-repeat, repeat-x !important;
+    background-position: center, center !important;
+    border-top: 2px solid rgba(74, 26, 16, 0.15) !important;
 }
 
 /* --- 战斗日志像素框 --- */
@@ -1113,4 +1415,929 @@ html, body {
 @keyframes screenFadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
+}
+
+/* ============================================ */
+/* ⚔️ 战斗界面 — 侧边栏布局                     */
+/* ============================================ */
+
+/* --- 战斗屏幕布局：侧边栏全高 + 右侧内容 --- */
+#screen-combat.active {
+    flex-direction: row;
+}
+
+.combat-right-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+}
+
+/* --- 左侧角色面板 --- */
+.combat-sidebar {
+    width: 180px;
+    min-width: 180px;
+    background:
+        linear-gradient(180deg,
+            rgba(10, 18, 12, 0.98) 0%,
+            rgba(8, 14, 10, 0.96) 50%,
+            rgba(12, 8, 16, 0.98) 100%);
+    border-right: 2px solid rgba(74, 26, 16, 0.3);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(201, 168, 76, 0.2) transparent;
+    position: relative;
+    z-index: 2;
+}
+
+.combat-sidebar::before {
+    content: '';
+    position: absolute;
+    top: 0; right: -1px;
+    width: 1px; height: 100%;
+    background: linear-gradient(180deg,
+        rgba(201, 168, 76, 0.05),
+        rgba(201, 168, 76, 0.25),
+        rgba(201, 168, 76, 0.05));
+    pointer-events: none;
+}
+
+/* --- 头像区域 --- */
+.sidebar-portrait {
+    padding: 10px 12px 6px;
+    text-align: center;
+}
+
+.portrait-frame {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 6px;
+}
+
+/* 维多利亚时代椰圆浮雕照片框 */
+.sidebar-avatar-img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 3px solid rgba(160, 130, 60, 0.50);
+    box-shadow:
+        0 0 0 2px rgba(25, 18, 10, 0.9),
+        0 0 0 4px rgba(120, 95, 45, 0.25),
+        inset 0 0 20px rgba(0, 0, 0, 0.6),
+        0 4px 12px rgba(0, 0, 0, 0.8);
+    object-fit: cover;
+    image-rendering: auto;
+    display: block;
+    filter: sepia(0.15) contrast(1.1);
+}
+
+/* --- 徽章叠加层（头像右上角） --- */
+.badge-overlay {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 32px;
+    height: 32px;
+    background: rgba(20, 16, 32, 0.9);
+    border: 2px solid rgba(201, 168, 76, 0.5);
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    box-shadow:
+        2px 2px 0 rgba(0, 0, 0, 0.6),
+        0 0 8px rgba(201, 168, 76, 0.15);
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.badge-overlay:hover {
+    border-color: rgba(201, 168, 76, 0.8);
+    box-shadow:
+        2px 2px 0 rgba(0, 0, 0, 0.6),
+        0 0 14px rgba(201, 168, 76, 0.3);
+}
+
+/* --- 徽章说明弹窗 --- */
+.badge-tooltip {
+    position: absolute;
+    top: 110px;
+    left: 12px;
+    right: 12px;
+    background: rgba(20, 16, 32, 0.95);
+    border: 2px solid rgba(201, 168, 76, 0.4);
+    border-radius: 3px;
+    padding: 10px;
+    z-index: 10;
+    box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.7);
+}
+
+.badge-tooltip-name {
+    font-family: var(--font-heading, 'serif');
+    font-size: 13px;
+    color: var(--gold, #c9a84c);
+    margin-bottom: 4px;
+    text-align: center;
+}
+
+.badge-tooltip-desc {
+    font-size: 11px;
+    color: rgba(200, 195, 180, 0.75);
+    line-height: 1.4;
+    text-align: center;
+}
+
+.sidebar-name {
+    font-family: var(--font-heading, 'serif');
+    font-size: 13px;
+    color: var(--gold, #c9a84c);
+    letter-spacing: 0.08em;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+}
+
+.sidebar-turn {
+    font-size: 10px;
+    color: rgba(201, 168, 76, 0.5);
+    letter-spacing: 0.1em;
+    margin-top: 2px;
+    font-family: monospace;
+}
+
+/* --- 分割线 (装饰性 Art Deco) --- */
+.sidebar-divider {
+    height: 1px;
+    margin: 4px 12px;
+    background: linear-gradient(90deg,
+        transparent,
+        rgba(201, 168, 76, 0.20) 20%,
+        rgba(201, 168, 76, 0.35) 50%,
+        rgba(201, 168, 76, 0.20) 80%,
+        transparent);
+    position: relative;
+}
+
+.sidebar-divider::after {
+    content: '◈';
+    position: absolute;
+    top: -6px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 7px;
+    color: rgba(201, 168, 76, 0.30);
+    background: rgba(10, 18, 12, 0.96);
+    padding: 0 4px;
+}
+
+/* --- 核心数值 --- */
+.sidebar-stats {
+    padding: 4px 10px;
+}
+
+.stat-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 4px;
+    border-radius: 2px;
+    margin-bottom: 1px;
+    font-family: monospace;
+    font-size: 12px;
+    position: relative;
+}
+
+.stat-row:hover {
+    background: rgba(201, 168, 76, 0.06);
+}
+
+/* --- 像素图标图片 --- */
+.stat-icon-img {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    image-rendering: pixelated;
+    filter: brightness(1.3);
+}
+
+.stat-icon-sm {
+    width: 12px;
+    height: 12px;
+}
+
+.stat-label {
+    color: rgba(200, 195, 180, 0.75);
+    flex: 1;
+    letter-spacing: 0.08em;
+    font-size: 11px;
+}
+
+.stat-value {
+    color: rgba(230, 225, 210, 0.95);
+    font-weight: bold;
+    font-size: 13px;
+    text-shadow: 0 0 6px rgba(0, 0, 0, 0.8);
+    min-width: 48px;
+    text-align: right;
+}
+
+/* --- 状态条 → 加粗巨型化 --- */
+.stat-bar-wrap {
+    height: 18px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(201, 168, 76, 0.12);
+    border-radius: 2px;
+    margin: 2px 4px 4px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.stat-bar {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.4s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+/* HP 内部流血条纹动画 */
+.stat-bar-hp {
+    background: linear-gradient(90deg, #5a0a0a, #b02020, #cc3333, #b02020);
+    box-shadow: 0 0 12px rgba(204, 51, 51, 0.5);
+}
+.stat-bar-hp::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 3px,
+        rgba(255, 255, 255, 0.06) 3px,
+        rgba(255, 255, 255, 0.06) 6px
+    );
+    animation: barStripeScroll 1.5s linear infinite;
+}
+
+/* SAN 内部漩涡条纹动画 */
+.stat-bar-san {
+    background: linear-gradient(90deg, #2a1540, #6a40a0, #9370db, #6a40a0);
+    box-shadow: 0 0 12px rgba(147, 112, 219, 0.5);
+}
+.stat-bar-san::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 4px,
+        rgba(180, 140, 255, 0.08) 4px,
+        rgba(180, 140, 255, 0.08) 8px
+    );
+    animation: barStripeScroll 2s linear infinite reverse;
+}
+
+@keyframes barStripeScroll {
+    from { background-position-x: 0; }
+    to { background-position-x: 12px; }
+}
+
+/* --- 能量/移动/护甲紧凑布局 --- */
+.sidebar-stats-compact {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px 2px;
+    padding: 2px 6px 4px;
+}
+
+.sidebar-stats-compact .stat-row {
+    margin-bottom: 0;
+    padding: 2px 2px;
+}
+
+.sidebar-stats-compact .stat-label {
+    font-size: 10px;
+    letter-spacing: 0.04em;
+}
+
+.sidebar-stats-compact .stat-value {
+    font-size: 12px;
+    min-width: 32px;
+}
+
+/* --- SAN 状态行 --- */
+.sanity-state-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 6px 5px;
+    font-size: 11px;
+}
+
+.sanity-state-label {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: #9370db;
+}
+
+/* --- 雷达图 — 在侧边栏显示 --- */
+.sidebar-radar {
+    display: block;
+    padding: 2px 6px;
+}
+
+.radar-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+/* --- 状态效果 --- */
+.sidebar-buffs {
+    padding: 4px 10px 6px;
+    flex: 1;
+    min-height: 30px;
+}
+
+.buffs-title {
+    font-size: 9px;
+    color: rgba(201, 168, 76, 0.4);
+    letter-spacing: 0.15em;
+    text-align: center;
+    margin-bottom: 3px;
+    font-family: var(--font-heading, 'serif');
+}
+
+.buffs-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: center;
+}
+
+.buff-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px 6px;
+    border-radius: 2px;
+    font-size: 9px;
+    font-family: monospace;
+    border: 1px solid;
+    box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.5);
+}
+
+.buff-badge.is-buff {
+    background: rgba(42, 157, 143, 0.15);
+    border-color: rgba(42, 157, 143, 0.4);
+    color: #4ec9a0;
+}
+
+.buff-badge.is-debuff {
+    background: rgba(196, 51, 51, 0.15);
+    border-color: rgba(196, 51, 51, 0.4);
+    color: #e06060;
+}
+
+.buff-badge .buff-icon {
+    font-size: 11px;
+}
+
+.buff-badge .buff-value {
+    font-weight: bold;
+}
+
+/* --- 中央网格区域 → 居中 + 响应式缩放 --- */
+.combat-grid-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    padding: 4px;
+    position: relative;
+    overflow: hidden;
+}
+
+
+/* --- HP 数值颜色 --- */
+.stat-hp .stat-value { color: #e06060; }
+.stat-san .stat-value { color: #b088e0; }
+.stat-energy .stat-value { color: #5e9ce6; }
+.stat-move .stat-value { color: #4ec9a0; }
+.stat-block .stat-value { color: #c9a84c; }
+
+/* ============================================ */
+/* 🌫️ 背景雾气 Canvas 层                       */
+/* ============================================ */
+
+.fog-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.5;
+}
+
+/* ============================================ */
+/* 📺 CRT 扫描线叠加层                          */
+/* ============================================ */
+
+.crt-scanlines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9998;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.04) 2px,
+        rgba(0, 0, 0, 0.04) 4px
+    );
+    mix-blend-mode: multiply;
+}
+
+/* 微弱的色差效果 */
+.crt-scanlines::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse at 50% 50%, transparent 60%, rgba(10, 26, 15, 0.12) 100%);
+    pointer-events: none;
+}
+
+/* 确保内容在 fog/crt 之上 */
+.combat-sidebar {
+    position: relative;
+    z-index: 2;
+}
+
+.card-zones-bar {
+    position: relative;
+    z-index: 1;
+}
+
+.combat-actions {
+    position: relative;
+    z-index: 1;
+}
+
+/* ============================================ */
+/* 📜 面板羊皮纸底纹 + 像素不规则边框            */
+/* ============================================ */
+
+/* 羊皮纸噪点纹理叠加 */
+/* 侧边栏 → 禁忌手稿/旧纸张风格 */
+.combat-sidebar::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        /* 横向粗纤维 */
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 5px,
+            rgba(160, 130, 80, 0.04) 5px,
+            rgba(160, 130, 80, 0.04) 6px
+        ),
+        /* 纵向细纤维 */
+        repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 7px,
+            rgba(120, 100, 60, 0.03) 7px,
+            rgba(120, 100, 60, 0.03) 8px
+        ),
+        /* 整体发黄色调 */
+        linear-gradient(180deg,
+            rgba(80, 60, 30, 0.08) 0%,
+            rgba(60, 45, 20, 0.05) 50%,
+            rgba(80, 60, 30, 0.10) 100%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* 确保侧边栏子元素在纹理之上 */
+.combat-sidebar > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* 侧边栏暖色底色 + 撕裂右边缘 */
+.combat-sidebar {
+    background: linear-gradient(180deg,
+        rgba(25, 18, 10, 0.95) 0%,
+        rgba(20, 15, 8, 0.92) 50%,
+        rgba(28, 20, 12, 0.95) 100%) !important;
+    border-right: none;
+    box-shadow:
+        2px 0 0 0 rgba(100, 70, 30, 0.30),
+        3px 1px 0 0 rgba(100, 70, 30, 0.15),
+        4px 3px 0 0 rgba(100, 70, 30, 0.25),
+        3px 5px 0 0 rgba(100, 70, 30, 0.10),
+        4px 7px 0 0 rgba(100, 70, 30, 0.20),
+        3px 9px 0 0 rgba(100, 70, 30, 0.08),
+        4px 11px 0 0 rgba(100, 70, 30, 0.22),
+        5px 0 20px rgba(0, 0, 0, 0.4);
+}
+
+/* ============================================ */
+/* 🪨 手牌区底部石台纹理                         */
+/* ============================================ */
+
+.card-zones-bar::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 6px,
+            rgba(30, 40, 32, 0.15) 6px,
+            rgba(30, 40, 32, 0.15) 7px
+        ),
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 4px,
+            rgba(20, 30, 22, 0.10) 4px,
+            rgba(20, 30, 22, 0.10) 5px
+        );
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.6;
+}
+
+.card-zones-bar > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* ============================================ */
+/* 📚 牌堆厚度视觉化                             */
+/* ============================================ */
+
+.card-zone {
+    position: relative;
+}
+
+/* 牌堆层叠效果 — 使用 box-shadow 替代伪元素（伪元素已用于背景图） */
+.card-zone {
+    box-shadow:
+        2px 2px 0 rgba(0,0,0,0.5),
+        4px 4px 0 rgba(10, 8, 18, 0.3),
+        6px 6px 0 rgba(8, 5, 15, 0.15),
+        inset 0 0 15px rgba(0,0,0,0.4),
+        inset 1px 1px 0 rgba(255,255,255,0.04) !important;
+}
+
+/* ============================================ */
+/* 🌀 理智关联视觉腐蚀效果                       */
+/* ============================================ */
+
+/* 低理智时侧边栏边框脉动 */
+@keyframes sanityCorrupt {
+    0%, 100% {
+        box-shadow:
+            2px 0 0 0 rgba(74, 26, 16, 0.35),
+            3px 1px 0 0 rgba(74, 26, 16, 0.20);
+    }
+    25% {
+        box-shadow:
+            2px 0 0 0 rgba(100, 0, 80, 0.5),
+            4px 2px 0 0 rgba(100, 0, 80, 0.30),
+            3px 4px 0 0 rgba(74, 26, 16, 0.25);
+    }
+    50% {
+        box-shadow:
+            3px 0 0 0 rgba(74, 26, 16, 0.40),
+            2px 2px 0 0 rgba(100, 0, 80, 0.35),
+            4px 3px 0 0 rgba(100, 0, 80, 0.20);
+    }
+    75% {
+        box-shadow:
+            2px 1px 0 0 rgba(100, 0, 80, 0.45),
+            3px 3px 0 0 rgba(74, 26, 16, 0.30),
+            2px 5px 0 0 rgba(100, 0, 80, 0.25);
+    }
+}
+
+.combat-sidebar.san-low {
+    animation: sanityCorrupt 3s ease-in-out infinite;
+}
+
+/* 低理智时SAN条脉动 */
+@keyframes sanBarPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+.stat-bar-san.san-critical {
+    animation: sanBarPulse 1.2s ease-in-out infinite;
+    box-shadow: 0 0 12px rgba(147, 112, 219, 0.6);
+}
+
+/* 低理智时头像边框紫色侵蚀 */
+.combat-sidebar.san-low .sidebar-avatar-img {
+    border-color: rgba(147, 112, 219, 0.6);
+    box-shadow:
+        3px 3px 0 rgba(0, 0, 0, 0.7),
+        inset 0 0 20px rgba(100, 0, 150, 0.3),
+        0 0 15px rgba(147, 112, 219, 0.2);
+}
+
+/* 严重低理智时卡牌抖动 */
+@keyframes cardTremble {
+    0%, 100% { transform: var(--fan-transform, none); }
+    25% { transform: var(--fan-transform, none) translate(1px, -1px); }
+    50% { transform: var(--fan-transform, none) translate(-1px, 1px); }
+    75% { transform: var(--fan-transform, none) translate(1px, 0px); }
+}
+
+.hand-area.san-severe .card:not(.fan-hover) {
+    animation: cardTremble 0.3s ease-in-out infinite;
+}
+
+/* ============================================ */
+/* 📜 卷轴回合 Banner                            */
+/* ============================================ */
+
+.turn-scroll-banner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 2px 12px;
+    white-space: nowrap;
+    background:
+        linear-gradient(90deg,
+            transparent,
+            rgba(10, 18, 12, 0.75) 20%,
+            rgba(12, 20, 14, 0.85) 50%,
+            rgba(10, 18, 12, 0.75) 80%,
+            transparent);
+    border-bottom: 1px solid rgba(201, 168, 76, 0.12);
+    /* 作为棋盘内部覆盖层 */
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 8;
+    font-family: var(--font-heading, 'serif');
+    font-size: 11px;
+    opacity: 0.85;
+}
+
+.turn-scroll-banner::before,
+.turn-scroll-banner::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg,
+        transparent,
+        rgba(201, 168, 76, 0.25),
+        transparent);
+}
+
+.scroll-ornament {
+    font-size: 8px;
+    color: rgba(201, 168, 76, 0.4);
+    letter-spacing: 0.3em;
+}
+
+.scroll-text {
+    font-size: 11px;
+    color: rgba(201, 168, 76, 0.7);
+    letter-spacing: 0.15em;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+}
+
+.scroll-text span {
+    color: #c9a84c;
+    font-weight: bold;
+}
+
+.scroll-phase {
+    font-size: 9px;
+    color: rgba(147, 112, 219, 0.6);
+    letter-spacing: 0.1em;
+    font-style: italic;
+}
+
+/* 回合切换时闪烁动画 */
+@keyframes bannerFlash {
+    0% { background-color: rgba(201, 168, 76, 0.15); }
+    100% { background-color: transparent; }
+}
+
+.turn-scroll-banner.flash {
+    animation: bannerFlash 0.6s ease-out;
+}
+
+/* ============================================ */
+/* 🎨 SVG 属性图标                               */
+/* ============================================ */
+
+.stat-icon-svg {
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));
+}
+
+/* ============================================ */
+/* 🎯 卡牌瞵准引导线                            */
+/* ============================================ */
+
+.targeting-guide-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 50;
+    overflow: visible;
+}
+
+/* 引导线动画 */
+@keyframes dashScroll {
+    from { stroke-dashoffset: 24; }
+    to { stroke-dashoffset: 0; }
+}
+
+#targeting-guide-path {
+    animation: dashScroll 0.8s linear infinite;
+}
+
+/* ============================================ */
+/* ⚙ 结束回合按钮印章动画                       */
+/* ============================================ */
+
+@keyframes stampPress {
+    0% { transform: scale(1.15) rotate(-3deg); opacity: 0.8; }
+    40% { transform: scale(0.95) rotate(1deg); }
+    60% { transform: scale(1.02) rotate(0deg); }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+.btn-end-turn.stamping {
+    animation: stampPress 0.4s ease-out;
+}
+
+/* 按钮悬停齿轮旋转图标 */
+.btn-end-turn::after {
+    content: '';
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 12px;
+    height: 12px;
+    border: 1.5px solid rgba(201, 168, 76, 0.3);
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.btn-end-turn:hover::after {
+    border-color: rgba(201, 168, 76, 0.6);
+    transform: translateY(-50%) rotate(90deg);
+}
+
+/* ============================================ */
+/* 🌊 棋盘边缘远景暗角装饰                       */
+/* ============================================ */
+
+.combat-grid-wrap {
+    position: relative;
+}
+
+.grid-container {
+    position: relative;
+}
+
+/* 棋盘内部暗角效果 */
+.grid-container::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+    box-shadow:
+        inset 0 0 40px rgba(0, 0, 0, 0.5),
+        inset 0 0 80px rgba(4, 10, 6, 0.3);
+    border: 1px solid rgba(74, 26, 16, 0.15);
+}
+
+/* 棋盘顶部雾气渐变 */
+.grid-container::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 40px;
+    background: linear-gradient(180deg,
+        rgba(4, 10, 6, 0.7) 0%,
+        transparent 100%);
+    pointer-events: none;
+    z-index: 4;
+}
+
+/* ============================================ */
+/* 🎭 美术总监重设计 — 大胆视觉改进                    */
+/* ============================================ */
+
+/* --- 棋盘透视深度感 + 伪3D俯角 --- */
+/* rotateX + scale 由 PixiRenderer.ts JS 动态管理 */
+.grid-container {
+    position: relative;
+    perspective: 800px;
+    overflow: visible;
+}
+
+/* --- 卡片区“深渊裂缝”顶部边缘 --- */
+.card-zones-bar {
+    position: relative;
+}
+
+.card-zones-bar::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 0;
+    right: 0;
+    height: 8px;
+    background: linear-gradient(180deg,
+        transparent 0%,
+        rgba(90, 40, 120, 0.15) 40%,
+        rgba(60, 30, 90, 0.25) 70%,
+        rgba(40, 20, 60, 0.4) 100%);
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 8'%3E%3Cpath d='M0,8 L5,3 L12,6 L18,2 L25,7 L32,1 L40,5 L48,2 L55,7 L62,3 L70,6 L78,1 L85,5 L92,2 L100,7 L108,3 L115,6 L122,1 L130,5 L138,2 L145,7 L152,3 L160,6 L168,1 L175,5 L182,2 L190,7 L200,3 L200,8 Z' fill='white'/%3E%3C/svg%3E");
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 8'%3E%3Cpath d='M0,8 L5,3 L12,6 L18,2 L25,7 L32,1 L40,5 L48,2 L55,7 L62,3 L70,6 L78,1 L85,5 L92,2 L100,7 L108,3 L115,6 L122,1 L130,5 L138,2 L145,7 L152,3 L160,6 L168,1 L175,5 L182,2 L190,7 L200,3 L200,8 Z' fill='white'/%3E%3C/svg%3E");
+    mask-size: 200px 8px;
+    -webkit-mask-size: 200px 8px;
+    mask-repeat: repeat-x;
+    -webkit-mask-repeat: repeat-x;
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* 裂缝发光边缘线 */
+.card-zones-bar::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg,
+        transparent 5%,
+        rgba(147, 112, 219, 0.3) 20%,
+        rgba(90, 60, 140, 0.5) 50%,
+        rgba(147, 112, 219, 0.3) 80%,
+        transparent 95%);
+    pointer-events: none;
+    z-index: -1;
+    box-shadow: 0 0 12px rgba(100, 60, 160, 0.3);
+}
+
+/* --- 全屏戟剧性暗角 --- */
+#screen-combat::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 10;
+    background: radial-gradient(
+        ellipse 90% 85% at 55% 40%,
+        transparent 40%,
+        rgba(0, 0, 0, 0.12) 60%,
+        rgba(0, 0, 0, 0.35) 80%,
+        rgba(0, 0, 0, 0.6) 100%);
+}
+
+/* --- 状态空间扩展（雷达图隐藏后利用空间） --- */
+.sidebar-buffs {
+    flex: 1;
+    min-height: 80px;
+    overflow-y: auto;
+}
+
+.buffs-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
 }

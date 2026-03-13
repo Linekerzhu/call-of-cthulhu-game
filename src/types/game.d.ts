@@ -18,6 +18,20 @@ declare global {
         defense: number;
         badge: string | null;
         madnessMutations: string[];
+        // 肉体属性 (Physical)
+        physique: number;
+        speed: number;
+        strength: number;
+        basePhysique: number;
+        baseSpeed: number;
+        baseStrength: number;
+        // 精神属性 (Mental)
+        will: number;
+        knowledge: number;
+        coercion: number;
+        baseWill: number;
+        baseKnowledge: number;
+        baseCoercion: number;
         
         deck: ICard[];
         drawPile: ICard[];

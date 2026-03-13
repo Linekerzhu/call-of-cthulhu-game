@@ -13,9 +13,16 @@ const DEFAULT_PLAYER: IPlayerState = {
     block: 0,
     sanity: 50, maxSanity: 50, madness: 0, sanityLevel: 5,
     madnessMutations: [],
+    // 肉体属性 (Physical)
+    physique: 10, speed: 10, strength: 10,
+    basePhysique: 10, baseSpeed: 10, baseStrength: 10,
+    // 精神属性 (Mental)
+    will: 10, knowledge: 10, coercion: 10,
+    baseWill: 10, baseKnowledge: 10, baseCoercion: 10,
     deck: [], hand: [], drawPile: [], discardPile: [],
     position: { row: 2, col: 0 },
     badge: null,
+    protagonist: null,
 };
 
 // ====================
@@ -47,6 +54,9 @@ export interface GameStoreState {
     modifyMaxHP: (amount: number, source?: string) => void;
     modifyMovement: (amount: number) => number;
     damagePlayerThroughBlock: (rawDamage: number, source?: string) => number;
+
+    // --- 属性修改器 ---
+    modifyAttribute: (attr: string, amount: number, permanent?: boolean, source?: string) => void;
 
     // --- 日志 ---
     pushLog: (message: string) => void;
@@ -273,6 +283,39 @@ export const gameStore = createStore<GameStoreState>()(
 
             set({ player: p });
             return actualDamage;
+        },
+
+        // --- 属性修改器 ---
+        modifyAttribute: (attr, amount, permanent?, source?) => {
+            const p = { ...get().player };
+
+            // 属性名映射 (base 和 current)
+            const attrMap: Record<string, { current: string; base: string; label: string }> = {
+                physique:  { current: 'physique',  base: 'basePhysique',  label: '体格' },
+                speed:     { current: 'speed',     base: 'baseSpeed',     label: '速度' },
+                strength:  { current: 'strength',  base: 'baseStrength',  label: '力量' },
+                will:      { current: 'will',      base: 'baseWill',      label: '意志' },
+                knowledge: { current: 'knowledge', base: 'baseKnowledge', label: '知识' },
+                coercion:  { current: 'coercion',  base: 'baseCoercion',  label: '威压' },
+            };
+
+            const info = attrMap[attr];
+            if (!info) return;
+
+            if (permanent) {
+                (p as any)[info.base] = Math.max(1, ((p as any)[info.base] || 10) + amount);
+                (p as any)[info.current] = (p as any)[info.base];
+            } else {
+                (p as any)[info.current] = Math.max(1, ((p as any)[info.current] || 10) + amount);
+            }
+
+            if (source) {
+                const sign = amount > 0 ? '+' : '';
+                const perm = permanent ? '(永久)' : '(临时)';
+                get().pushLog(`📊 ${source}：${info.label} ${sign}${amount} ${perm}`);
+            }
+
+            set({ player: p });
         },
 
         // --- 日志 ---

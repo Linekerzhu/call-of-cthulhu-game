@@ -25,3 +25,34 @@ export const BASE_AGILITY = 3;
 
 /** 格挡上限 */
 export const MAX_BLOCK = 99;
+
+// === 属性系统常量 ===
+/** 普通人基准属性值 */
+export const BASE_ATTRIBUTE = 10;
+
+/** 基础生命上限 */
+export const BASE_MAX_HP = 50;
+
+/** 每点体格调整值对应的 HP 增量 */
+export const HP_PER_PHYSIQUE_MOD = 5;
+
+/** 每点知识 mod 降低的 maxSanity */
+export const KNOWLEDGE_SAN_COST = 2;
+
+/** 意志 SAN 正比缩放系数 */
+export const WILL_SAN_SCALE = 8;
+
+/** 威压 SAN 反比缩放系数 */
+export const COERCION_SAN_SCALE = 8;
+
+/** HP 虚弱阈值 — 轻度 */
+export const HP_WEAKNESS_LIGHT = 0.5;
+
+/** HP 虚弱阈值 — 重度 */
+export const HP_WEAKNESS_SEVERE = 0.25;
+
+/** 轻度虚弱减值 */
+export const HP_WEAKNESS_LIGHT_PENALTY = 2;
+
+/** 重度虚弱减值 */
+export const HP_WEAKNESS_SEVERE_PENALTY = 4;

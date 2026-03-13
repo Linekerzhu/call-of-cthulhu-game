@@ -40,6 +40,17 @@
             </div>
         </div>
 
+        <!-- 主角选择屏幕 -->
+        <div id="screen-protagonist" class="screen">
+            <div class="protagonist-screen">
+                <h2 class="protagonist-screen-title">选择你的角色</h2>
+                <p class="protagonist-screen-subtitle">每个角色都有不同的身份背景和天赋属性</p>
+                <div class="protagonist-list" id="protagonist-list">
+                    <!-- 主角卡片动态生成 -->
+                </div>
+            </div>
+        </div>
+
         <!-- 徽章选择屏幕 -->
         <div id="screen-badge" class="screen">
             <div class="badge-screen">
@@ -73,25 +84,147 @@
             <!-- SAN扭曲叠加层 -->
             <div class="san-distortion-overlay" id="san-distortion"></div>
 
-            <div class="combat-header">
-                <div class="status-bar">
-                    <span class="status-item hp-item"><span class="stat-icon">♥</span> <span id="c-hp">50</span>/<span id="c-max-hp">50</span></span>
-                    <span class="status-item energy-item"><span class="stat-icon">◆</span> <span id="c-energy">3</span>/3</span>
-                    <span class="status-item move-item"><span class="stat-icon">⬡</span> <span id="c-movement">3</span>/3</span>
-                    <span class="status-item block-item"><span class="stat-icon">◇</span> <span id="c-block">0</span></span>
-                    <span class="status-item sanity-item"><span class="stat-icon">☽</span> <span id="c-sanity">50</span>/<span id="c-max-sanity">50</span> <span id="sanity-state" class="sanity-state-label">理智清醒</span></span>
-                    <span class="status-item madness-item" id="madness-display" style="display: none;"><span class="stat-icon">⚝</span> <span id="c-madness">0</span></span>
-                    <span class="status-item turn-item">回合<span id="c-turn">1</span></span>
+            <!-- 背景雾气层 -->
+            <canvas class="fog-canvas" id="fog-canvas"></canvas>
+
+            <!-- CRT扫描线效果 -->
+            <div class="crt-scanlines"></div>
+
+            <!-- 战斗主体：侧边栏（全高） + 右侧内容 -->
+            <!-- ===== 左侧角色面板（全高） ===== -->
+                <div class="combat-sidebar" id="combat-sidebar">
+                    <!-- 角色头像 + 徽章 -->
+                    <div class="sidebar-portrait">
+                        <div class="portrait-frame">
+                            <img id="sidebar-avatar" class="sidebar-avatar-img" src="" alt="avatar" />
+                            <!-- 徽章图标（右上角） -->
+                            <div class="badge-overlay" id="badge-overlay" title="">
+                                <span id="badge-icon"></span>
+                            </div>
+                        </div>
+                        <div class="sidebar-name" id="sidebar-name">调查员</div>
+                        <div class="sidebar-turn">第 <span id="c-turn">1</span> 回合</div>
+                    </div>
+
+                    <!-- 徽章说明弹窗（悬浮） -->
+                    <div class="badge-tooltip" id="badge-tooltip" style="display:none;">
+                        <div class="badge-tooltip-name" id="badge-tooltip-name"></div>
+                        <div class="badge-tooltip-desc" id="badge-tooltip-desc"></div>
+                    </div>
+
+                    <!-- 分割线 -->
+                    <div class="sidebar-divider"></div>
+
+                    <!-- 核心数值 -->
+                    <div class="sidebar-stats" id="sidebar-stats">
+                        <div class="stat-row stat-hp">
+                            <svg class="stat-icon-svg" viewBox="0 0 16 16" width="16" height="16">
+                                <path d="M8 14 L2 8 Q0 5 3 3 Q5 2 8 5 Q11 2 13 3 Q16 5 14 8 Z" fill="#cc3333" stroke="#8b1a1a" stroke-width="0.8"/>
+                                <rect x="6" y="5" width="4" height="1" fill="rgba(255,255,255,0.3)"/>
+                            </svg>
+                            <span class="stat-label">生命</span>
+                            <span class="stat-value"><span id="c-hp">50</span>/<span id="c-max-hp">50</span></span>
+                        </div>
+                        <div class="stat-bar-wrap"><div class="stat-bar stat-bar-hp" id="bar-hp"></div></div>
+
+                        <div class="stat-row stat-san">
+                            <svg class="stat-icon-svg" viewBox="0 0 16 16" width="16" height="16">
+                                <circle cx="8" cy="8" r="6" fill="#5a3d8a" stroke="#9370db" stroke-width="0.8"/>
+                                <circle cx="8" cy="8" r="3" fill="#1a0a2e"/>
+                                <circle cx="7" cy="7" r="1" fill="#b088e0"/>
+                                <path d="M8 2 Q12 6 8 8 Q4 10 8 14" fill="none" stroke="rgba(147,112,219,0.4)" stroke-width="0.6"/>
+                            </svg>
+                            <span class="stat-label">理智</span>
+                            <span class="stat-value"><span id="c-sanity">50</span>/<span id="c-max-sanity">50</span></span>
+                        </div>
+                        <div class="stat-bar-wrap"><div class="stat-bar stat-bar-san" id="bar-san"></div></div>
+                        <div class="sanity-state-row">
+                            <span id="sanity-state" class="sanity-state-label">理智清醒</span>
+                            <span class="status-item madness-item" id="madness-display" style="display: none;">
+                                <img src="icons/madness.png" class="stat-icon-img stat-icon-sm" alt="M" /> <span id="c-madness">0</span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- 能量/移动/护甲 紧凑网格 -->
+                    <div class="sidebar-stats-compact">
+                        <div class="stat-row stat-energy">
+                            <svg class="stat-icon-svg" viewBox="0 0 16 16" width="14" height="14">
+                                <rect x="4" y="2" width="8" height="12" rx="2" fill="#2a4a6b" stroke="#4a8ab5" stroke-width="0.8"/>
+                                <rect x="6" y="4" width="4" height="3" fill="#6bcaff" opacity="0.7"/>
+                                <rect x="5" y="8" width="2" height="1" fill="#4a8ab5" opacity="0.5"/>
+                                <rect x="9" y="9" width="2" height="1" fill="#4a8ab5" opacity="0.5"/>
+                            </svg>
+                            <span class="stat-label">能量</span>
+                            <span class="stat-value"><span id="c-energy">3</span>/3</span>
+                        </div>
+                        <div class="stat-row stat-move">
+                            <svg class="stat-icon-svg" viewBox="0 0 16 16" width="14" height="14">
+                                <path d="M4 12 L8 4 L12 12 Z" fill="none" stroke="#4ec9a0" stroke-width="1.2"/>
+                                <circle cx="8" cy="9" r="1.5" fill="#4ec9a0"/>
+                                <line x1="8" y1="4" x2="8" y2="2" stroke="#4ec9a0" stroke-width="0.8"/>
+                            </svg>
+                            <span class="stat-label">移动</span>
+                            <span class="stat-value"><span id="c-movement">3</span>/3</span>
+                        </div>
+                        <div class="stat-row stat-block">
+                            <svg class="stat-icon-svg" viewBox="0 0 16 16" width="14" height="14">
+                                <path d="M8 2 L14 5 L14 10 L8 14 L2 10 L2 5 Z" fill="#5a4a20" stroke="#c9a84c" stroke-width="0.8"/>
+                                <path d="M8 5 L11 7 L11 10 L8 12 L5 10 L5 7 Z" fill="#7a6a30" opacity="0.5"/>
+                            </svg>
+                            <span class="stat-label">护甲</span>
+                            <span class="stat-value"><span id="c-block">0</span></span>
+                        </div>
+                    </div>
+
+                    <!-- 分割线 -->
+                    <div class="sidebar-divider"></div>
+
+                    <!-- 六维雷达图 -->
+                    <div class="sidebar-radar" id="sidebar-radar">
+                        <svg id="radar-chart" viewBox="0 0 160 140" class="radar-svg"></svg>
+                    </div>
+
+                    <!-- 分割线 -->
+                    <div class="sidebar-divider"></div>
+
+                    <!-- 状态效果 (Buff/Debuff) -->
+                    <div class="sidebar-buffs" id="sidebar-buffs">
+                        <div class="buffs-title">状态效果</div>
+                        <div class="buffs-list" id="buffs-list">
+                            <!-- 动态生成 -->
+                        </div>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="combat-main">
-                <!-- 网格容器 -->
-                <div class="grid-container">
-                    <div id="grid" class="grid"></div>
+
+            <!-- ===== 右侧内容（网格 + 卡牌） ===== -->
+            <div class="combat-right-content">
+                <!-- 中央网格 -->
+                <div class="combat-grid-wrap">
+                    <div class="grid-container">
+                        <!-- 卷轴回合 Banner (棋盘内覆盖层) -->
+                        <div class="turn-scroll-banner" id="turn-scroll-banner">
+                            <span class="scroll-ornament">✧</span>
+                            <span class="scroll-text">第 <span id="turn-number">1</span> 回合</span>
+                            <span class="scroll-phase" id="turn-phase">玄入者行动</span>
+                            <span class="scroll-ornament">✧</span>
+                        </div>
+                        <div id="grid" class="grid"></div>
+                    </div>
                 </div>
-            </div>
-            
+
+            <!-- 卡牌瞵准引导线 SVG 覆盖层 -->
+            <svg class="targeting-guide-svg" id="targeting-guide-svg">
+                <defs>
+                    <linearGradient id="guide-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="rgba(147,112,219,0.8)"/>
+                        <stop offset="100%" stop-color="rgba(201,168,76,0.8)"/>
+                    </linearGradient>
+                </defs>
+                <path id="targeting-guide-path" d="" fill="none" stroke="url(#guide-gradient)" stroke-width="2" stroke-dasharray="8,4" opacity="0"/>
+                <circle id="targeting-guide-dot" cx="0" cy="0" r="4" fill="rgba(201,168,76,0.7)" opacity="0"/>
+            </svg>
+
             <!-- 战斗日志 (半透明叠加) -->
             <div class="combat-log" id="combat-log"></div>
 
@@ -124,14 +257,15 @@
                 </div>
             </div>
 
-            <!-- 动作栏 -->
+            <!-- 动作栏（合并进卡片底栏） -->
             <div class="combat-actions">
                 <button class="btn-pixel btn-view-deck" id="btn-view-deck">牌库</button>
-                <button class="btn-end-turn" id="btn-end-turn">结束回合</button>
+                <button class="btn-end-turn" id="btn-end-turn">⚔ 结束回合</button>
             </div>
 
             <!-- 卡牌动画容器 -->
             <div class="card-animation-layer" id="card-animation-layer"></div>
+            </div>
         </div>
 
         <!-- 奖励选择屏幕 -->

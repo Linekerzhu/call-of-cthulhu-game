@@ -1,6 +1,7 @@
 import Utils from '../core/Utils.ts';
 import StatusEffectSystem from './StatusEffectSystem.ts';
 import CardEvolutionEngine from './CardEvolutionEngine.ts';
+import { getPhysicalDamageBonus, getMagicDamageBonus } from './AttributeEngine.ts';
 import type Game from '../core/Game.ts';
 import * as VFX from './CardVFX.ts';
 
@@ -154,6 +155,14 @@ const CardEffectEngine = {
             let damage = effect.value;
             const attackBonus = ctx.game.buffManager.getValue('attackBonus');
             if (attackBonus > 0) damage += attackBonus;
+
+            // === 力量调整值加成（物理伤害） ===
+            const strengthBonus = getPhysicalDamageBonus(ctx.player);
+            if (strengthBonus !== 0) {
+                damage += strengthBonus;
+                if (strengthBonus > 0) ctx.game.log(`💪 力量加成 +${strengthBonus}`);
+                else ctx.game.log(`💪 力量衰弱 ${strengthBonus}`);
+            }
 
             const damageMultiplier = ctx.game.getSanityEffect('damageMultiplier') || 1;
             damage = Math.floor(damage * damageMultiplier);
@@ -329,6 +338,10 @@ const CardEffectEngine = {
             let damage = effect.value;
             const attackBonus = ctx.game.buffManager.getValue('attackBonus');
             if (attackBonus > 0) damage += attackBonus;
+
+            // === 力量调整值加成（远程物理伤害） ===
+            const strengthBonus = getPhysicalDamageBonus(ctx.player);
+            if (strengthBonus !== 0) damage += strengthBonus;
 
             let actualDamage = damage;
             if (enemy.block && enemy.block > 0) {
@@ -540,6 +553,43 @@ const CardEffectEngine = {
                 ctx.game.renderSystem?.renderGrid();
                 const v = getVFX(ctx); if (v) { const tp = cellPx(ctx, target.row, target.col); VFX.vfxTeleport(v.layer, v.ticker, tp.x, tp.y); }
             }
+        },
+
+        // === 属性修改效果（卡牌影响意志/威压） ===
+        willBuff(effect: any, ctx: any) {
+            const amount = effect.value;
+            const permanent = effect.permanent || false;
+            ctx.game.state.modifyAttribute('will', amount, permanent, effect.source || '卡牌效果');
+            const sign = amount > 0 ? '+' : '';
+            ctx.game.log(`🧠 意志 ${sign}${amount}${permanent ? '(永久)' : ''}`);
+            const v = getVFX(ctx); if (v) { const p = cellPx(ctx, ctx.player.position.row, ctx.player.position.col); VFX.vfxBuff(v.layer, v.ticker, p.x, p.y, 0x6688ff); }
+        },
+
+        coercionBuff(effect: any, ctx: any) {
+            const amount = effect.value;
+            const permanent = effect.permanent || false;
+            ctx.game.state.modifyAttribute('coercion', amount, permanent, effect.source || '卡牌效果');
+            const sign = amount > 0 ? '+' : '';
+            ctx.game.log(`🔮 威压 ${sign}${amount}${permanent ? '(永久)' : ''}`);
+            const v = getVFX(ctx); if (v) { const p = cellPx(ctx, ctx.player.position.row, ctx.player.position.col); VFX.vfxBuff(v.layer, v.ticker, p.x, p.y, 0x9933ff); }
+        },
+
+        strengthBuff(effect: any, ctx: any) {
+            const amount = effect.value;
+            const permanent = effect.permanent || false;
+            ctx.game.state.modifyAttribute('strength', amount, permanent, effect.source || '卡牌效果');
+            const sign = amount > 0 ? '+' : '';
+            ctx.game.log(`💪 力量 ${sign}${amount}${permanent ? '(永久)' : ''}`);
+            const v = getVFX(ctx); if (v) { const p = cellPx(ctx, ctx.player.position.row, ctx.player.position.col); VFX.vfxBuff(v.layer, v.ticker, p.x, p.y, 0xff6600); }
+        },
+
+        speedBuff(effect: any, ctx: any) {
+            const amount = effect.value;
+            const permanent = effect.permanent || false;
+            ctx.game.state.modifyAttribute('speed', amount, permanent, effect.source || '卡牌效果');
+            const sign = amount > 0 ? '+' : '';
+            ctx.game.log(`🏃 速度 ${sign}${amount}${permanent ? '(永久)' : ''}`);
+            const v = getVFX(ctx); if (v) { const p = cellPx(ctx, ctx.player.position.row, ctx.player.position.col); VFX.vfxMovement(v.layer, v.ticker, p.x, p.y); }
         }
     }
 };

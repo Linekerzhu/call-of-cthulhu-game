@@ -55,6 +55,12 @@ function bindUIEvents() {
     var btnEndTurn = document.getElementById('btn-end-turn');
     if (btnEndTurn) {
         btnEndTurn.addEventListener('click', function () {
+            // 印章动画
+            btnEndTurn!.classList.remove('stamping');
+            void btnEndTurn!.offsetWidth;
+            btnEndTurn!.classList.add('stamping');
+            setTimeout(() => btnEndTurn!.classList.remove('stamping'), 500);
+
             if (game) game.endTurn();
         });
     }

@@ -1518,7 +1518,7 @@ html, body {
 /* ==================== */
 
 .hand-area {
-    min-height: 130px;
+    min-height: 150px;
     flex: 1;
     display: flex;
     justify-content: center;
@@ -1526,6 +1526,7 @@ html, body {
     padding: 10px 4px 0;
     position: relative;
     perspective: 600px;
+    overflow: visible;
 }
 
 /* ==================== */
@@ -1547,15 +1548,18 @@ html, body {
     cursor: pointer;
     transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
     transform-origin: bottom center;
-    margin: 0 -6px;
+    margin: 0;
     box-shadow:
         0 4px 16px rgba(0, 0, 0, 0.6),
         inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .card:hover {
-    transform: translateY(-40px) scale(1.2);
-    z-index: 100 !important;
+    /* Fan layout: transform controlled by JS, only apply glow here */
+    border-color: rgba(147, 112, 219, 0.7);
+}
+
+.card.fan-hover {
     box-shadow:
         0 12px 40px rgba(147, 112, 219, 0.4),
         0 0 20px rgba(147, 112, 219, 0.2);
@@ -1563,7 +1567,7 @@ html, body {
 }
 
 .card.selected {
-    transform: translateY(-45px) scale(1.22);
+    /* transform controlled by JS for fan layout */
     border-color: #c9a84c;
     box-shadow:
         0 0 30px rgba(201, 168, 76, 0.5),

@@ -1,6 +1,7 @@
 import EnemyTemplates from '../data/Enemies.ts';
 import Utils from '../core/Utils.ts';
 import StatusEffectSystem from './StatusEffectSystem.ts';
+import { getMovementFromSpeed, getPhysicalDamageBonus, getMagicDamageBonus, getMagicDefenseReduction } from './AttributeEngine.ts';
 import type Game from '../core/Game.ts';
 
 /**
@@ -232,9 +233,10 @@ export default class CombatSystem {
         const freshPlayer = this.game.state.player;
 
         const movePenalty = this.game.getSanityEffect('movementPenalty') as number || 0;
+        const speedBasedMove = getMovementFromSpeed(freshPlayer);
         const newMaxMove = movePenalty > 0
-            ? Math.max(1, (freshPlayer.agility || 3) - movePenalty)
-            : (freshPlayer.agility || 3);
+            ? Math.max(1, speedBasedMove - movePenalty)
+            : speedBasedMove;
 
         if (movePenalty > 0) {
             this.game.floatOnPlayer(`🌀 移动-${movePenalty}`, '#cc88ff');

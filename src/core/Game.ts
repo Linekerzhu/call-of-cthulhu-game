@@ -100,6 +100,7 @@ export default class Game {
     public showScreen(screenName: string): void { this.router.showScreen(screenName); }
     public startGame(): void { this.router.startGame(); }
     public showBadgeSelect(): void { this.router.showBadgeSelect(); }
+    public selectProtagonist(protagonistId: string): void { this.router.selectProtagonist(protagonistId); }
     public selectBadge(badgeId: string): void { this.router.selectBadge(badgeId); }
     public startFloor(floorNum: number): void { this.router.startFloor(floorNum); }
     public startCombat(enemyType: string): void { this.router.startCombat(enemyType); }

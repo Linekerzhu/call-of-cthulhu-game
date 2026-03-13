@@ -2,6 +2,7 @@ import type Game from '../core/Game.ts';
 import MapRenderer from '../renderers/MapRenderer.ts';
 import CombatRenderer from '../renderers/CombatRenderer.ts';
 import BadgeRenderer from '../renderers/BadgeRenderer.ts';
+import ProtagonistRenderer from '../renderers/ProtagonistRenderer.ts';
 import RewardRenderer from '../renderers/RewardRenderer.ts';
 import Shop from '../data/Shop.ts';
 
@@ -15,6 +16,7 @@ export default class RenderSystem {
     private mapRenderer: MapRenderer;
     public combatRenderer: CombatRenderer;
     private badgeRenderer: BadgeRenderer;
+    private protagonistRenderer: ProtagonistRenderer;
     private rewardRenderer: RewardRenderer;
     private shopItems: any[] = [];
 
@@ -23,6 +25,7 @@ export default class RenderSystem {
         this.mapRenderer = new MapRenderer(game);
         this.combatRenderer = new CombatRenderer(game);
         this.badgeRenderer = new BadgeRenderer(game);
+        this.protagonistRenderer = new ProtagonistRenderer(game);
         this.rewardRenderer = new RewardRenderer(game);
 
         // 注册事件监听
@@ -63,6 +66,9 @@ export default class RenderSystem {
 
     // --- Badge ---
     public renderBadgeSelect(): void { this.badgeRenderer.render(); }
+
+    // --- Protagonist ---
+    public renderProtagonistSelect(): void { this.protagonistRenderer.render(); }
 
     // --- Reward ---
     public renderRewardScreen(): void { this.rewardRenderer.render(); }

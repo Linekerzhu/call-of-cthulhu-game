@@ -1,5 +1,8 @@
 import PixiRenderer from '../systems/PixiRenderer.ts';
 import CardEvolutionEngine from '../systems/CardEvolutionEngine.ts';
+import FogCanvas from '../systems/FogCanvas.ts';
+import Protagonists from '../data/Protagonists.ts';
+import { BadgeManager } from '../data/Badges_Cthulhu.ts';
 import type Game from '../core/Game.ts';
 
 /**
@@ -10,6 +13,7 @@ import type Game from '../core/Game.ts';
 export default class CombatRenderer {
     private game: Game;
     public pixiRenderer: PixiRenderer | null = null;
+    private fogCanvas: FogCanvas | null = null;
 
     constructor(game: Game) {
         this.game = game;
@@ -21,8 +25,259 @@ export default class CombatRenderer {
         }
         this.pixiRenderer.init('grid');
 
+        // 初始化背景雾气
+        if (!this.fogCanvas) {
+            this.fogCanvas = new FogCanvas();
+        }
+        this.fogCanvas.init('screen-combat');
+
+        this.renderSidebar();
         this.renderGrid();
         this.updateCombatUI();
+
+        // 初始化卡牌瞄准引导线
+        this.initTargetingGuide();
+    }
+
+    /**
+     * 初始化卡牌瞄准引导线（贝塞尔曲线）
+     */
+    private _targetingGuideInit = false;
+    private initTargetingGuide(): void {
+        if (this._targetingGuideInit) return;
+        this._targetingGuideInit = true;
+
+        const combatScreen = document.getElementById('screen-combat');
+        const guidePath = document.getElementById('targeting-guide-path');
+        const guideDot = document.getElementById('targeting-guide-dot');
+        if (!combatScreen || !guidePath || !guideDot) return;
+
+        combatScreen.addEventListener('mousemove', (e: MouseEvent) => {
+            const selectedCard = (this.game.inputSystem as any).selectedCard;
+            if (selectedCard === null || selectedCard === undefined || selectedCard < 0) {
+                guidePath.setAttribute('opacity', '0');
+                guideDot.setAttribute('opacity', '0');
+                return;
+            }
+
+            // 找到选中卡牌的DOM元素位置
+            const handArea = document.getElementById('hand-area');
+            const cards = handArea?.querySelectorAll('.card');
+            if (!cards || !cards[selectedCard]) {
+                guidePath.setAttribute('opacity', '0');
+                guideDot.setAttribute('opacity', '0');
+                return;
+            }
+
+            const cardRect = cards[selectedCard].getBoundingClientRect();
+            const screenRect = combatScreen.getBoundingClientRect();
+
+            const startX = cardRect.left + cardRect.width / 2 - screenRect.left;
+            const startY = cardRect.top - screenRect.top;
+            const endX = e.clientX - screenRect.left;
+            const endY = e.clientY - screenRect.top;
+
+            // 贝塞尔曲线控制点 — 从卡牌向上弯曲
+            const cpY = Math.min(startY, endY) - 60;
+            const cpX1 = startX + (endX - startX) * 0.3;
+            const cpX2 = startX + (endX - startX) * 0.7;
+
+            const d = `M ${startX} ${startY} C ${cpX1} ${cpY}, ${cpX2} ${cpY}, ${endX} ${endY}`;
+            guidePath.setAttribute('d', d);
+            guidePath.setAttribute('opacity', '0.7');
+            guideDot.setAttribute('cx', String(endX));
+            guideDot.setAttribute('cy', String(endY));
+            guideDot.setAttribute('opacity', '0.8');
+        });
+    }
+
+    /**
+     * 渲染侧边栏：头像 + 名字
+     */
+    public renderSidebar(): void {
+        const player = this.game.state.player;
+        const protagonistId = (player as any).protagonist;
+        const pData = protagonistId ? Protagonists[protagonistId] : null;
+
+        // 头像
+        const avatarImg = document.getElementById('sidebar-avatar') as HTMLImageElement;
+        if (avatarImg && pData) {
+            avatarImg.src = pData.avatar;
+            avatarImg.alt = pData.name;
+        }
+
+        // 名字
+        const nameEl = document.getElementById('sidebar-name');
+        if (nameEl) nameEl.textContent = pData ? pData.name : '调查员';
+
+        // 徽章图标
+        const badgeId = player.badge;
+        if (badgeId) {
+            const badge = BadgeManager.getBadge(badgeId);
+            if (badge) {
+                const badgeIcon = document.getElementById('badge-icon');
+                if (badgeIcon) badgeIcon.textContent = badge.icon;
+
+                const badgeOverlay = document.getElementById('badge-overlay');
+                const badgeTooltip = document.getElementById('badge-tooltip');
+                const tooltipName = document.getElementById('badge-tooltip-name');
+                const tooltipDesc = document.getElementById('badge-tooltip-desc');
+
+                if (tooltipName) tooltipName.textContent = badge.icon + ' ' + badge.name;
+                if (tooltipDesc) tooltipDesc.textContent = badge.description;
+
+                // 点击切换徽章说明
+                if (badgeOverlay && badgeTooltip) {
+                    badgeOverlay.onclick = (e) => {
+                        e.stopPropagation();
+                        badgeTooltip.style.display = badgeTooltip.style.display === 'none' ? 'block' : 'none';
+                    };
+                    // 点击其他地方关闭
+                    document.addEventListener('click', () => {
+                        if (badgeTooltip) badgeTooltip.style.display = 'none';
+                    }, { once: false });
+                }
+            }
+        }
+
+        // 初始化雷达图
+        this.updateRadarChart();
+    }
+
+    /**
+     * SVG 六维雷达图渲染
+     */
+    public updateRadarChart(): void {
+        const svg = document.getElementById('radar-chart');
+        if (!svg) return;
+
+        const player = this.game.state.player as any;
+        const stats = [
+            { key: '体格', val: player.physique || 10, max: 20 },
+            { key: '速度', val: player.speed || 10, max: 20 },
+            { key: '力量', val: player.strength || 10, max: 20 },
+            { key: '意志', val: player.will || 10, max: 20 },
+            { key: '知识', val: player.knowledge || 10, max: 20 },
+            { key: '威压', val: player.coercion || 10, max: 20 },
+        ];
+
+        const cx = 80, cy = 70, maxR = 50;
+        const n = stats.length;
+        const angleStep = (Math.PI * 2) / n;
+        const startAngle = -Math.PI / 2;
+
+        // 计算各顶点
+        const getPoint = (i: number, ratio: number) => {
+            const a = startAngle + i * angleStep;
+            return {
+                x: cx + Math.cos(a) * maxR * ratio,
+                y: cy + Math.sin(a) * maxR * ratio
+            };
+        };
+
+        let html = '';
+
+        // 背景网格 (3层)
+        for (const level of [0.33, 0.66, 1.0]) {
+            const pts = stats.map((_, i) => getPoint(i, level));
+            const d = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ') + ' Z';
+            html += `<path d="${d}" fill="none" stroke="rgba(201,168,76,${0.08 + level * 0.08})" stroke-width="0.5"/>`;
+        }
+
+        // 轴线
+        for (let i = 0; i < n; i++) {
+            const p = getPoint(i, 1);
+            html += `<line x1="${cx}" y1="${cy}" x2="${p.x.toFixed(1)}" y2="${p.y.toFixed(1)}" stroke="rgba(201,168,76,0.12)" stroke-width="0.5"/>`;
+        }
+
+        // 数据多边形
+        const dataPts = stats.map((s, i) => getPoint(i, Math.min(s.val / s.max, 1)));
+        const dataD = dataPts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ') + ' Z';
+        html += `<path d="${dataD}" fill="rgba(147,112,219,0.15)" stroke="rgba(147,112,219,0.7)" stroke-width="1.5"/>`;
+
+        // 顶点圆点 + 标签
+        for (let i = 0; i < n; i++) {
+            const dp = dataPts[i];
+            const lp = getPoint(i, 1.22);
+            const mod = Math.floor((stats[i].val - 10) / 2);
+            const modStr = mod >= 0 ? `+${mod}` : `${mod}`;
+            const modColor = mod > 0 ? '#4ec9a0' : mod < 0 ? '#e06060' : 'rgba(200,195,180,0.5)';
+
+            // 数据点
+            html += `<circle cx="${dp.x.toFixed(1)}" cy="${dp.y.toFixed(1)}" r="2" fill="rgba(147,112,219,0.9)"/>`;
+
+            // 标签
+            html += `<text x="${lp.x.toFixed(1)}" y="${lp.y.toFixed(1)}" text-anchor="middle" dominant-baseline="central" font-size="8" fill="rgba(200,195,180,0.65)" font-family="monospace">${stats[i].key}</text>`;
+            html += `<text x="${lp.x.toFixed(1)}" y="${(lp.y + 9).toFixed(1)}" text-anchor="middle" font-size="7" fill="${modColor}" font-family="monospace" font-weight="bold">${stats[i].val}(${modStr})</text>`;
+        }
+
+        svg.innerHTML = html;
+    }
+
+    /**
+     * 更新HP/SAN状态条
+     */
+    private updateStatBars(): void {
+        const player = this.game.state.player;
+
+        const hpBar = document.getElementById('bar-hp');
+        if (hpBar) {
+            const pct = Math.max(0, Math.min(100, (player.hp / player.maxHp) * 100));
+            hpBar.style.width = pct + '%';
+        }
+
+        const sanBar = document.getElementById('bar-san');
+        if (sanBar) {
+            const pct = Math.max(0, Math.min(100, (player.sanity / player.maxSanity) * 100));
+            sanBar.style.width = pct + '%';
+        }
+    }
+
+    /**
+     * 显示 Buff/Debuff 状态效果
+     */
+    private updateBuffDisplay(): void {
+        const list = document.getElementById('buffs-list');
+        if (!list) return;
+
+        list.innerHTML = '';
+        const player = this.game.state.player as any;
+
+        // 从 buffManager 获取
+        const atkBonus = this.game.buffManager.getValue('attackBonus');
+        if (atkBonus > 0) this.appendBuff(list, '⚔', `攻+${atkBonus}`, 'buff');
+        if (atkBonus < 0) this.appendBuff(list, '⚔', `攻${atkBonus}`, 'debuff');
+
+        // 从 statusEffects 获取
+        if (player.statusEffects && player.statusEffects.length > 0) {
+            for (const se of player.statusEffects) {
+                const icon = se.type === 'buff' ? '✨' : '☠️';
+                const label = se.id.replace('_', ' ');
+                this.appendBuff(list, icon, `${label} ${se.value}`, se.type);
+            }
+        }
+
+        // 疯狂突变
+        if (player.madnessMutations && player.madnessMutations.length > 0) {
+            for (const m of player.madnessMutations) {
+                this.appendBuff(list, '🌀', m, 'debuff');
+            }
+        }
+
+        // 无状态时显示提示
+        if (list.children.length === 0) {
+            const empty = document.createElement('div');
+            empty.style.cssText = 'font-size:9px;color:rgba(200,195,180,0.3);text-align:center;';
+            empty.textContent = '— 无 —';
+            list.appendChild(empty);
+        }
+    }
+
+    private appendBuff(container: HTMLElement, icon: string, text: string, type: string): void {
+        const badge = document.createElement('div');
+        badge.className = `buff-badge is-${type}`;
+        badge.innerHTML = `<span class="buff-icon">${icon}</span><span class="buff-value">${text}</span>`;
+        container.appendChild(badge);
     }
 
     public renderEnemyPanel(): void {
@@ -190,7 +445,7 @@ export default class CombatRenderer {
                 this.updateElement('c-madness', madness);
                 const madnessDisplay = document.getElementById('madness-display');
                 if (madnessDisplay) {
-                    madnessDisplay.style.display = 'inline';
+                    madnessDisplay.style.display = 'inline-flex';
                     if (madness >= 8) {
                         madnessDisplay.style.color = '#FF4500';
                         madnessDisplay.style.animation = 'madnessPulse 0.5s infinite';
@@ -203,21 +458,6 @@ export default class CombatRenderer {
                 const madnessDisplay = document.getElementById('madness-display');
                 if (madnessDisplay) {
                     madnessDisplay.style.display = 'none';
-                }
-            }
-
-            const sanityRatio = player.sanity / 50;  // 基于标准值50
-            const sanityItem = document.querySelector('.sanity-item') as HTMLElement;
-            if (sanityItem) {
-                if (sanityRatio < 0.3) {
-                    sanityItem.style.color = '#FF1493';
-                    sanityItem.style.animation = 'madnessPulse 1s infinite';
-                } else if (sanityRatio < 0.5) {
-                    sanityItem.style.color = '#FF6347';
-                    sanityItem.style.animation = 'none';
-                } else {
-                    sanityItem.style.color = '';
-                    sanityItem.style.animation = 'none';
                 }
             }
 
@@ -237,9 +477,70 @@ export default class CombatRenderer {
             this.updateElement('c-turn', this.game.state.combat.turn);
         }
 
+        // 更新侧边栏
+        this.updateStatBars();
+        this.updateRadarChart();
+        this.updateBuffDisplay();
+
         this.renderCardZones();
         this.updateSanDistortion();
+
+        // 理智关联视觉腐蚀效果
+        this.updateSanityCorruption();
+
+        // 更新回合卷轴 Banner
+        this.updateTurnBanner();
+
         this.renderHand();
+    }
+
+    /**
+     * 更新棋盘顶部回合卷轴 Banner
+     */
+    private _lastTurn: number = 0;
+    private updateTurnBanner(): void {
+        const combat = this.game.state.combat;
+        if (!combat) return;
+
+        const turnNum = document.getElementById('turn-number');
+        const turnPhase = document.getElementById('turn-phase');
+        const banner = document.getElementById('turn-scroll-banner');
+
+        if (turnNum) turnNum.textContent = String(combat.turn || 1);
+        if (turnPhase) {
+            turnPhase.textContent = combat.phase === 'enemy'
+                ? '深渊潮涌' : '玄入者行动';
+        }
+
+        // 回合切换闪烁
+        if (banner && combat.turn !== this._lastTurn) {
+            this._lastTurn = combat.turn;
+            banner.classList.remove('flash');
+            void banner.offsetWidth; // force reflow
+            banner.classList.add('flash');
+        }
+    }
+
+    /**
+     * 根据理智值切换视觉腐蚀CSS类
+     */
+    private updateSanityCorruption(): void {
+        const player = this.game.state.player;
+        const sanRatio = player.sanity / (player.maxSanity || 50);
+
+        const sidebar = document.getElementById('combat-sidebar');
+        const sanBar = document.getElementById('bar-san');
+        const handArea = document.getElementById('hand-area');
+
+        if (sidebar) {
+            sidebar.classList.toggle('san-low', sanRatio < 0.6);
+        }
+        if (sanBar) {
+            sanBar.classList.toggle('san-critical', sanRatio < 0.3);
+        }
+        if (handArea) {
+            handArea.classList.toggle('san-severe', sanRatio < 0.3);
+        }
     }
 
     public renderHand(): void {
@@ -262,6 +563,14 @@ export default class CombatRenderer {
         const typeIcons: Record<string, string> = {
             attack: '⚔️', defense: '🛡️', skill: '✨', move: '👟', curse: '💀'
         };
+
+        // === 扇形布局参数 ===
+        const totalCards = hand.length;
+        const fanAngle = totalCards <= 3 ? 4 : totalCards <= 5 ? 3.5 : totalCards <= 7 ? 3 : 2.5; // 每张牌的角度
+        const cardSpacing = totalCards <= 3 ? 90 : totalCards <= 5 ? 75 : totalCards <= 7 ? 65 : 55;
+        const arcFactor = totalCards <= 3 ? 4 : totalCards <= 5 ? 5 : 6; // 弧线下沉系数
+
+        const cardElements: HTMLElement[] = [];
 
         for (let i = 0; i < hand.length; i++) {
             const originalCard = hand[i];
@@ -415,10 +724,71 @@ export default class CombatRenderer {
 
             cardEl.appendChild(infoBar);
 
+            // === 扇形布局 Transform ===
+            const offset = i - (totalCards - 1) / 2;
+            const rotation = offset * fanAngle;
+            const yShift = Math.abs(offset) * arcFactor;
+            cardEl.style.setProperty('--fan-rotation', `${rotation}deg`);
+            cardEl.style.setProperty('--fan-y', `${yShift}px`);
+            cardEl.style.transform = `translateY(${yShift}px) rotate(${rotation}deg)`;
+            cardEl.style.zIndex = String(50 + i);
+            // 调整间距
+            if (totalCards > 1) {
+                cardEl.style.marginLeft = i === 0 ? '0' : `-${120 - cardSpacing}px`;
+            }
+
             // === 事件 ===
             cardEl.addEventListener('click', () => {
                 this.hideCardTooltip();  // 出牌时立即清除tooltip
                 this.onCardClick(i);
+            });
+
+            // === 扇形 Hover 交互 ===
+            const cardIndex = i;
+            cardEl.addEventListener('mouseenter', () => {
+                // 悬浮卡牌：上浮 + 放大 + 去除旋转
+                cardEl.style.transform = 'translateY(-40px) scale(1.25) rotate(0deg)';
+                cardEl.style.zIndex = '200';
+                cardEl.classList.add('fan-hover');
+
+                // 邻牌避让
+                if (cardIndex > 0 && cardElements[cardIndex - 1]) {
+                    const prevOffset = (cardIndex - 1) - (totalCards - 1) / 2;
+                    const prevRot = prevOffset * fanAngle;
+                    const prevY = Math.abs(prevOffset) * arcFactor;
+                    cardElements[cardIndex - 1].style.transform =
+                        `translateX(-20px) translateY(${prevY}px) rotate(${prevRot}deg)`;
+                }
+                if (cardIndex < totalCards - 1 && cardElements[cardIndex + 1]) {
+                    const nextOffset = (cardIndex + 1) - (totalCards - 1) / 2;
+                    const nextRot = nextOffset * fanAngle;
+                    const nextY = Math.abs(nextOffset) * arcFactor;
+                    cardElements[cardIndex + 1].style.transform =
+                        `translateX(20px) translateY(${nextY}px) rotate(${nextRot}deg)`;
+                }
+            });
+
+            cardEl.addEventListener('mouseleave', () => {
+                // 恢复扇形原位
+                cardEl.style.transform = `translateY(${yShift}px) rotate(${rotation}deg)`;
+                cardEl.style.zIndex = String(50 + cardIndex);
+                cardEl.classList.remove('fan-hover');
+
+                // 恢复邻牌
+                if (cardIndex > 0 && cardElements[cardIndex - 1]) {
+                    const prevOffset = (cardIndex - 1) - (totalCards - 1) / 2;
+                    const prevRot = prevOffset * fanAngle;
+                    const prevY = Math.abs(prevOffset) * arcFactor;
+                    cardElements[cardIndex - 1].style.transform =
+                        `translateY(${prevY}px) rotate(${prevRot}deg)`;
+                }
+                if (cardIndex < totalCards - 1 && cardElements[cardIndex + 1]) {
+                    const nextOffset = (cardIndex + 1) - (totalCards - 1) / 2;
+                    const nextRot = nextOffset * fanAngle;
+                    const nextY = Math.abs(nextOffset) * arcFactor;
+                    cardElements[cardIndex + 1].style.transform =
+                        `translateY(${nextY}px) rotate(${nextRot}deg)`;
+                }
             });
 
             let cardHoverTimer: ReturnType<typeof setTimeout> | null = null;
@@ -444,6 +814,7 @@ export default class CombatRenderer {
                 }, 300);
             });
 
+            cardElements.push(cardEl);
             handEl.appendChild(cardEl);
         }
     }

@@ -10,11 +10,11 @@ export default class PixiRenderer {
     private app: PIXI.Application | null = null;
 
     // 网格参数
-    public readonly CELL_SIZE = 64;
+    public CELL_SIZE = 64;
     public readonly ROWS = 5;
     public readonly COLS = 8;
-    public readonly WIDTH = this.COLS * this.CELL_SIZE;
-    public readonly HEIGHT = this.ROWS * this.CELL_SIZE;
+    public get WIDTH() { return this.COLS * this.CELL_SIZE; }
+    public get HEIGHT() { return this.ROWS * this.CELL_SIZE; }
 
     // 图层容器
     private gridLayer: PIXI.Container | null = null;
@@ -30,20 +30,20 @@ export default class PixiRenderer {
     // 地形颜色映射
     // ============================
     private static readonly TERRAIN_COLORS: Record<string, number> = {
-        'normal':    0x1a1a2e,
-        'madness':   0x2e0a2e,   // 疯狂之地 — 紫红暗色
+        'normal':    0x0a1a0f,
+        'madness':   0x1a0a1f,   // 疯狂之地 — 暗紫
         'sanctuary': 0x0a2e1a,   // 避难所 — 深绿色
-        'void':      0x0a0018,   // 虚空
+        'void':      0x08050f,   // 虚空
         'swamp':     0x0d2b1a,
         'ruins':     0x2d1a1a,
         'altar':     0x1a0a2e
     };
 
     private static readonly TERRAIN_BORDER: Record<string, number> = {
-        'normal':    0x2a2a4e,
-        'madness':   0x5e1a5e,   // 疯狂之地边框
+        'normal':    0x1a2b22,
+        'madness':   0x3a1a40,   // 疯狂之地边框
         'sanctuary': 0x1a5e2a,   // 避难所边框
-        'void':      0x1a0028,   // 虚空边框
+        'void':      0x120a1e,   // 虚空边框
         'swamp':     0x1d4b2a,
         'ruins':     0x4d2a2a,
         'altar':     0x3a1a4e
@@ -65,10 +65,21 @@ export default class PixiRenderer {
             return;
         }
 
+        // 动态计算 CELL_SIZE —— 让棋盘尽可能填满可用空间
+        const parentEl = container.parentElement;
+        if (parentEl) {
+            const rect = parentEl.getBoundingClientRect();
+            const availW = rect.width - 16;  // 留出少量边距
+            const availH = rect.height - 16;
+            const cellByW = Math.floor(availW / this.COLS);
+            const cellByH = Math.floor(availH / this.ROWS);
+            this.CELL_SIZE = Math.max(48, Math.min(128, cellByW, cellByH));
+        }
+
         this.app = new PIXI.Application({
             width: this.WIDTH,
             height: this.HEIGHT,
-            backgroundColor: 0x0a0a1a,
+            backgroundColor: 0x040a06,
             antialias: true,
             resolution: window.devicePixelRatio || 1,
             autoDensity: true
@@ -77,6 +88,27 @@ export default class PixiRenderer {
         // 将 canvas 插入容器
         container.innerHTML = '';
         container.appendChild(this.app.view as HTMLCanvasElement);
+
+        // 响应式缩放 — 当容器空间不足时自动缩小棋盘
+        const gridContainerEl = container;
+        const wrapEl = container.parentElement?.parentElement; // combat-grid-wrap
+        if (wrapEl) {
+            const fitGrid = () => {
+                const wr = wrapEl.getBoundingClientRect();
+                const canvasW = this.WIDTH;
+                const canvasH = this.HEIGHT;
+                const scaleX = (wr.width - 8) / canvasW;
+                const scaleY = (wr.height - 8) / canvasH;
+                const scale = Math.min(1, scaleX, scaleY);
+                // 合并透视倾斜 + 缩放
+                gridContainerEl.style.transform = `rotateX(6deg) scale(${scale.toFixed(3)})`;
+                gridContainerEl.style.transformOrigin = 'center 60%';
+            };
+            const resizeObs = new ResizeObserver(fitGrid);
+            resizeObs.observe(wrapEl);
+            // 初始调用
+            requestAnimationFrame(fitGrid);
+        }
 
         // 初始化图层（渲染顺序：底 → 顶）
         this.gridLayer = new PIXI.Container();
@@ -146,6 +178,38 @@ export default class PixiRenderer {
                 cell.beginFill(fillColor);
                 cell.drawRect(0, 0, this.CELL_SIZE, this.CELL_SIZE);
                 cell.endFill();
+
+                // 石板纹理变体 — 用 seeded 伪随机画几条微弱的纹路线
+                const seed = r * 31 + c * 17;
+                const lineCount = 2 + (seed % 3); // 2-4 lines per tile
+                for (let li = 0; li < lineCount; li++) {
+                    const lseed = seed * 7 + li * 13;
+                    const isHorizontal = (lseed % 2) === 0;
+                    const pos = 8 + ((lseed * 3) % (this.CELL_SIZE - 16));
+                    const len = 12 + ((lseed * 5) % 24);
+                    const start = 4 + ((lseed * 11) % (this.CELL_SIZE - len - 4));
+                    const alpha = 0.06 + ((lseed % 5) * 0.015);
+                    const shade = (lseed % 2 === 0) ? 0xffffff : 0x000000;
+                    cell.lineStyle(1, shade, alpha);
+                    if (isHorizontal) {
+                        cell.moveTo(start, pos);
+                        cell.lineTo(start + len, pos);
+                    } else {
+                        cell.moveTo(pos, start);
+                        cell.lineTo(pos, start + len);
+                    }
+                }
+
+                // 角落石板接缝点
+                const dotAlpha = 0.04 + ((seed % 4) * 0.01);
+                cell.lineStyle(0);
+                cell.beginFill(0x000000, dotAlpha);
+                cell.drawCircle(1, 1, 1);
+                cell.drawCircle(this.CELL_SIZE - 1, 1, 1);
+                cell.drawCircle(1, this.CELL_SIZE - 1, 1);
+                cell.drawCircle(this.CELL_SIZE - 1, this.CELL_SIZE - 1, 1);
+                cell.endFill();
+
                 cell.x = c * this.CELL_SIZE;
                 cell.y = r * this.CELL_SIZE;
 
@@ -173,6 +237,89 @@ export default class PixiRenderer {
                 }
             }
         }
+
+        // === 环境装饰物 sprite ===
+        this.renderEnvironmentDecorations(grid);
+    }
+
+    /**
+     * 在部分格子上绘制环境装饰物（骨头、蘑菇、裂缝、蜡烛等）
+     */
+    private renderEnvironmentDecorations(grid: any[][]): void {
+        if (!this.gridLayer) return;
+
+        const decorTypes = ['crack', 'bone', 'mushroom', 'candle', 'rune'];
+
+        for (let r = 0; r < this.ROWS; r++) {
+            for (let c = 0; c < this.COLS; c++) {
+                const terrain = (grid && grid[r] && grid[r][c]) ? grid[r][c].terrain : 'normal';
+                if (terrain !== 'normal') continue;
+
+                // ~18% 的格子有装饰
+                const seed = r * 37 + c * 53 + 7;
+                if (seed % 6 !== 0) continue;
+
+                const decorIdx = seed % decorTypes.length;
+                const deco = new PIXI.Graphics();
+                const cx = c * this.CELL_SIZE;
+                const cy = r * this.CELL_SIZE;
+                // 在格子内随机偏移
+                const ox = 10 + ((seed * 3) % (this.CELL_SIZE - 20));
+                const oy = 10 + ((seed * 7) % (this.CELL_SIZE - 20));
+
+                switch (decorTypes[decorIdx]) {
+                    case 'crack':
+                        // 细裂缝线
+                        deco.lineStyle(1, 0x000000, 0.12);
+                        deco.moveTo(cx + ox, cy + oy);
+                        deco.lineTo(cx + ox + 8, cy + oy + 5);
+                        deco.lineTo(cx + ox + 6, cy + oy + 10);
+                        deco.moveTo(cx + ox + 8, cy + oy + 5);
+                        deco.lineTo(cx + ox + 14, cy + oy + 3);
+                        break;
+                    case 'bone':
+                        // 小骨头碎片
+                        deco.lineStyle(0);
+                        deco.beginFill(0xd4c8a0, 0.15);
+                        deco.drawRect(cx + ox, cy + oy, 6, 2);
+                        deco.drawCircle(cx + ox, cy + oy + 1, 1.5);
+                        deco.drawCircle(cx + ox + 6, cy + oy + 1, 1.5);
+                        deco.endFill();
+                        break;
+                    case 'mushroom':
+                        // 小蘑菇
+                        deco.lineStyle(0);
+                        deco.beginFill(0x4a3060, 0.2);
+                        deco.drawCircle(cx + ox + 3, cy + oy, 3);
+                        deco.endFill();
+                        deco.beginFill(0x3a2050, 0.18);
+                        deco.drawRect(cx + ox + 2, cy + oy, 2, 5);
+                        deco.endFill();
+                        break;
+                    case 'candle':
+                        // 蜡烛火焰
+                        deco.lineStyle(0);
+                        deco.beginFill(0x8b7040, 0.15);
+                        deco.drawRect(cx + ox + 1, cy + oy + 2, 2, 5);
+                        deco.endFill();
+                        deco.beginFill(0xffaa33, 0.12);
+                        deco.drawCircle(cx + ox + 2, cy + oy + 1, 2);
+                        deco.endFill();
+                        break;
+                    case 'rune':
+                        // 地面符文圆
+                        deco.lineStyle(0.5, 0x5a3d8a, 0.08);
+                        deco.drawCircle(cx + ox + 4, cy + oy + 4, 4);
+                        deco.moveTo(cx + ox + 1, cy + oy + 4);
+                        deco.lineTo(cx + ox + 7, cy + oy + 4);
+                        deco.moveTo(cx + ox + 4, cy + oy + 1);
+                        deco.lineTo(cx + ox + 4, cy + oy + 7);
+                        break;
+                }
+
+                this.gridLayer.addChild(deco);
+            }
+        }
     }
 
     // ============================
@@ -195,7 +342,7 @@ export default class PixiRenderer {
 
         // 玩家 — 像素精灵
         if (player) {
-            const playerSprite = createEntitySprite('player', true, this.CELL_SIZE, this.app.ticker);
+            const playerSprite = createEntitySprite('player', true, this.CELL_SIZE, this.app.ticker, player.protagonist);
             playerSprite.x = player.position.col * this.CELL_SIZE + this.CELL_SIZE / 2;
             playerSprite.y = player.position.row * this.CELL_SIZE + this.CELL_SIZE / 2;
             this.entityLayer.addChild(playerSprite);
@@ -215,11 +362,11 @@ export default class PixiRenderer {
                 enemyContainer.addChild(enemySprite);
 
                 // HP条背景
-                const hpBarWidth = 40;
+                const hpBarWidth = 48;
                 const hpBarHeight = 4;
                 const hpBg = new PIXI.Graphics();
                 hpBg.beginFill(0x000000, 0.5);
-                hpBg.drawRoundedRect(-hpBarWidth / 2, 18, hpBarWidth, hpBarHeight, 2);
+                hpBg.drawRoundedRect(-hpBarWidth / 2, 20, hpBarWidth, hpBarHeight, 2);
                 hpBg.endFill();
                 enemyContainer.addChild(hpBg);
 
@@ -228,7 +375,7 @@ export default class PixiRenderer {
                 const hpFill = new PIXI.Graphics();
                 const hpColor = e.hp / e.maxHp > 0.5 ? 0xe74c3c : (e.hp / e.maxHp > 0.25 ? 0xff6b35 : 0xff0000);
                 hpFill.beginFill(hpColor);
-                hpFill.drawRoundedRect(-hpBarWidth / 2, 18, hpFillWidth, hpBarHeight, 2);
+                hpFill.drawRoundedRect(-hpBarWidth / 2, 20, hpFillWidth, hpBarHeight, 2);
                 hpFill.endFill();
                 enemyContainer.addChild(hpFill);
 
@@ -303,18 +450,31 @@ export default class PixiRenderer {
             }
         }
 
-        // 路径格子半透明高亮
+        // 路径格子半透明高亮 + 路径点
         for (const p of path) {
+            const px = p.col * this.CELL_SIZE;
+            const py = p.row * this.CELL_SIZE;
             g.lineStyle(0);
-            g.beginFill(0x00ff88, 0.15);
-            g.drawRect(p.col * this.CELL_SIZE, p.row * this.CELL_SIZE, this.CELL_SIZE, this.CELL_SIZE);
+            g.beginFill(0x00ff88, 0.12);
+            g.drawRect(px, py, this.CELL_SIZE, this.CELL_SIZE);
+            g.endFill();
+
+            // 路径中心点标记
+            g.beginFill(0x00ff88, 0.35);
+            g.drawCircle(px + half, py + half, 2.5);
             g.endFill();
         }
 
-        // 目标格高亮
+        // 目标格高亮 — 发光边框 + 中心标记
         g.lineStyle(2, 0x00ff88, 1);
-        g.beginFill(0x00ff88, 0.3);
+        g.beginFill(0x00ff88, 0.25);
         g.drawRect(targetCol * this.CELL_SIZE, targetRow * this.CELL_SIZE, this.CELL_SIZE, this.CELL_SIZE);
+        g.endFill();
+
+        // 目标中心较大标记
+        g.lineStyle(0);
+        g.beginFill(0x00ff88, 0.5);
+        g.drawCircle(targetCol * this.CELL_SIZE + half, targetRow * this.CELL_SIZE + half, 4);
         g.endFill();
 
         // 消耗文字
@@ -350,9 +510,20 @@ export default class PixiRenderer {
             for (let c = 0; c < this.COLS; c++) {
                 const dist = Math.abs(r - playerPos.row) + Math.abs(c - playerPos.col);
                 if (dist <= range) {
-                    g.lineStyle(1, 0xff4444, 0.5);
-                    g.beginFill(0xff4444, 0.12);
-                    g.drawRect(c * this.CELL_SIZE, r * this.CELL_SIZE, this.CELL_SIZE, this.CELL_SIZE);
+                    const cx = c * this.CELL_SIZE;
+                    const cy = r * this.CELL_SIZE;
+                    const half = this.CELL_SIZE / 2;
+
+                    // 范围填充
+                    g.lineStyle(1.5, 0xff4444, 0.6);
+                    g.beginFill(0xff4444, 0.10);
+                    g.drawRect(cx, cy, this.CELL_SIZE, this.CELL_SIZE);
+                    g.endFill();
+
+                    // 中心标记点
+                    g.lineStyle(0);
+                    g.beginFill(0xff4444, 0.3);
+                    g.drawCircle(cx + half, cy + half, 3);
                     g.endFill();
                 }
             }

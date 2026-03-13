@@ -156,6 +156,10 @@ export default class GameState {
         return gameStore.getState().damagePlayerThroughBlock(rawDamage, source);
     }
 
+    public modifyAttribute(attr: string, amount: number, permanent?: boolean, source?: string): void {
+        gameStore.getState().modifyAttribute(attr, amount, permanent, source);
+    }
+
     public updateSanityState(): void {
         // SAN等级现在由 store 内部自动计算，此方法保留兼容
         const p = gameStore.getState().player;

@@ -6,7 +6,11 @@
  * - 里·初窥: SAN < 70%  → 解锁第 1 个里效果
  * - 里·深陷: SAN < 40%  → 解锁第 2 个里效果
  * - 里·深渊: SAN < 15%  → 完全变异
+ *
+ * 知识属性影响：每点 knowledge_mod 使阈值偏移 +5%
  */
+
+import { getKnowledgeThresholdShift } from './AttributeEngine.ts';
 
 export interface InnerEffect {
     sanityThreshold: number;    // SAN% 低于此值时解锁
@@ -28,8 +32,9 @@ export default class CardEvolutionEngine {
     /**
      * 获取卡牌当前的觉醒状态
      * 返回觉醒级别 (0=表, 1=初窥, 2=深陷, 3=深渊)
+     * @param thresholdShift 知识带来的阈值偏移（正值 = 更容易解锁）
      */
-    static getAwakeningLevel(card: any, sanityRatio: number, autoAwaken: boolean = false): number {
+    static getAwakeningLevel(card: any, sanityRatio: number, autoAwaken: boolean = false, thresholdShift: number = 0): number {
         if (!card.innerEffects || card.innerEffects.length === 0) return 0;
 
         // 不可名状突变：自动最大觉醒
@@ -39,7 +44,9 @@ export default class CardEvolutionEngine {
 
         let level = 0;
         for (let i = 0; i < card.innerEffects.length; i++) {
-            if (sanityRatio < card.innerEffects[i].sanityThreshold) {
+            // 知识偏移使阈值增大（更容易解锁）
+            const adjustedThreshold = card.innerEffects[i].sanityThreshold + thresholdShift;
+            if (sanityRatio < adjustedThreshold) {
                 level = i + 1;
             }
         }
@@ -49,8 +56,8 @@ export default class CardEvolutionEngine {
     /**
      * 获取觉醒后的卡牌展示信息（用于渲染）
      */
-    static getResolvedCard(card: any, sanityRatio: number, autoAwaken: boolean = false): any {
-        const level = this.getAwakeningLevel(card, sanityRatio, autoAwaken);
+    static getResolvedCard(card: any, sanityRatio: number, autoAwaken: boolean = false, thresholdShift: number = 0): any {
+        const level = this.getAwakeningLevel(card, sanityRatio, autoAwaken, thresholdShift);
         if (level === 0) return card;
 
         const innerEffects: InnerEffect[] = card.innerEffects;
@@ -116,8 +123,9 @@ export default class CardEvolutionEngine {
     static resolveEffectsForPlay(card: any, player: any): { card: any; bonusLog: string[] } {
         const sanityRatio = player.sanity / 50;  // 基于标准值50计算
         const autoAwaken = !!(player.madnessMutations && player.madnessMutations.includes('unnameable'));
+        const thresholdShift = getKnowledgeThresholdShift(player);
 
-        const resolved = this.getResolvedCard(card, sanityRatio, autoAwaken);
+        const resolved = this.getResolvedCard(card, sanityRatio, autoAwaken, thresholdShift);
         const bonusLog: string[] = [];
 
         if (resolved._awakened) {
@@ -217,7 +225,7 @@ export default class CardEvolutionEngine {
      * 获取卡牌里词条的展示信息（用于tooltip和牌库查看器）
      * 返回每一层级的显示状态：cipher(加密) 或 revealed(已解锁)
      */
-    static getInnerEffectDisplay(card: any, sanityRatio: number, autoAwaken: boolean = false): {
+    static getInnerEffectDisplay(card: any, sanityRatio: number, autoAwaken: boolean = false, thresholdShift: number = 0): {
         level: number;
         tiers: Array<{
             tierIndex: number;
@@ -229,7 +237,7 @@ export default class CardEvolutionEngine {
             color: string;
         }>;
     } {
-        const level = this.getAwakeningLevel(card, sanityRatio, autoAwaken);
+        const level = this.getAwakeningLevel(card, sanityRatio, autoAwaken, thresholdShift);
         const tiers: any[] = [];
 
         if (!card.innerEffects || card.innerEffects.length === 0) {
@@ -241,7 +249,7 @@ export default class CardEvolutionEngine {
 
         for (let i = 0; i < card.innerEffects.length; i++) {
             const inner = card.innerEffects[i];
-            const unlocked = autoAwaken || (sanityRatio < inner.sanityThreshold);
+            const unlocked = autoAwaken || (sanityRatio < (inner.sanityThreshold + thresholdShift));
             const tierName = tierNames[i] || `里·第${i + 1}层`;
             const thresholdPercent = Math.floor(inner.sanityThreshold * 100);
 

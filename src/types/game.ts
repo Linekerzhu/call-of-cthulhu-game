@@ -13,12 +13,27 @@ export interface IPlayerState {
     madness: number;
     sanityLevel: number;
     madnessMutations: string[];
+    // === 肉体属性 (Physical) ===
+    physique: number;       // 体格：决定 maxHp
+    speed: number;          // 速度：决定移动力加减值
+    strength: number;       // 力量：决定物理攻击加减值
+    basePhysique: number;   // 基础体格（永久值）
+    baseSpeed: number;      // 基础速度（永久值）
+    baseStrength: number;   // 基础力量（永久值）
+    // === 精神属性 (Mental) ===
+    will: number;           // 意志：抵抗魔法伤害
+    knowledge: number;      // 知识：解锁卡牌异能
+    coercion: number;       // 威压：法术伤害加值
+    baseWill: number;       // 基础意志（永久值）
+    baseKnowledge: number;  // 基础知识（永久值）
+    baseCoercion: number;   // 基础威压（永久值）
     deck: any[];
     hand: any[];
     drawPile: any[];
     discardPile: any[];
     position: { row: number, col: number };
     badge: string | null;
+    protagonist: string | null;
 }
 
 export interface IMapNode {

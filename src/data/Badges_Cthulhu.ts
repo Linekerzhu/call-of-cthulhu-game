@@ -1,5 +1,6 @@
 import Cards from './Cards_Cthulhu.ts';
 import Utils from '../core/Utils.ts';
+import { getMaxHpFromPhysique, getKnowledgeSanityCost } from '../systems/AttributeEngine.ts';
 
 /**
  * 克苏鲁风格徽章数据 - Badges_Cthulhu
@@ -22,7 +23,7 @@ var Badges: Record<string, any> = {
         stats: {
             hpBonus: 0,
             energyBonus: 0,
-            sanity: 50  // 理智值上限
+            sanity: 50
         }
     },
 
@@ -45,7 +46,7 @@ var Badges: Record<string, any> = {
     },
 
     // ====================
-    // 黄衣信徒 - 诅咒控制型（新增）
+    // 黄衣信徒 - 诅咒控制型
     // ====================
     '黄衣信徒': {
         id: '黄衣信徒',
@@ -81,31 +82,33 @@ var BadgeManager: any = {
         return Badges[badgeId] || null;
     },
 
-    // 应用徽章效果到玩家
+    // 应用徽章效果到玩家（在主角属性已设置之后调用）
     applyBadge: function (player, badgeId) {
         var badge = this.getBadge(badgeId);
         if (!badge) {
             return false;
         }
 
-
         // 设置玩家徽章
         player.badge = badgeId;
 
-        // 应用属性加成
-        if (badge.stats.hpBonus) {
-            player.maxHp += badge.stats.hpBonus;
-            player.hp = Math.min(player.hp + badge.stats.hpBonus, player.maxHp);
-        }
+        // === 由主角体格计算 maxHp，再叠加徽章 HP 加成 ===
+        var computedMaxHp = getMaxHpFromPhysique(player);
+        var hpBonus = badge.stats.hpBonus || 0;
+        player.maxHp = computedMaxHp + hpBonus;
+        player.hp = player.maxHp;
+
+        // === 由主角知识计算 maxSanity 减少，再应用徽章 sanity 上限 ===
+        var baseSanity = badge.stats.sanity || 50;
+        var sanityCost = getKnowledgeSanityCost(player);
+        player.maxSanity = Math.max(10, baseSanity - sanityCost);
+        player.sanity = player.maxSanity;
+        player.sanityLevel = 5;
+
+        // 应用能量加成
         if (badge.stats.energyBonus) {
             player.maxEnergy += badge.stats.energyBonus;
             player.baseMaxEnergy = player.maxEnergy;
-        }
-        if (badge.stats.sanity) {
-            player.maxSanity = badge.stats.sanity;
-            player.sanity = badge.stats.sanity;
-            // 同步理智等级（满值时应为5）
-            player.sanityLevel = 5;
         }
 
         // 添加起始卡牌到卡组
@@ -119,7 +122,6 @@ var BadgeManager: any = {
                 }
             }
         }
-
 
         return true;
     },
